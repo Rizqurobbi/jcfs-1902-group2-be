@@ -12,5 +12,6 @@ const db = mysql.createPool({
     database: process.env.DB
 })
 
-const dbQuery = util.promisify(db.query).bind(db)
+const dbQuery = util.promisify(db.query).bind(db);
+
 module.exports = { db, dbQuery }
