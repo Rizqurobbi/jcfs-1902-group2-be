@@ -41,5 +41,25 @@ module.exports = {
                 error: error
             })
         }
+    },
+    getCategory: async (req, res) => {
+        try {
+            let getCategory = `SELECT * FROM category`
+            let resultsCategory = await dbQuery(getCategory)
+            res.status(200).send({
+                success: true,
+                message: "Get Products Success ✅",
+                dataCategory: resultsCategory,
+                error: ""
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed ❌",
+                error: error
+            })
+        }
+
     }
 }
