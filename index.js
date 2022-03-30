@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 app.use(bearerToken()); // untuk mengambil data token dari req.header client
-const { db } = require('./supports/database')
+
 // DB Check Connection
 db.getConnection((err, connection) => {
     if (err) {
