@@ -5,7 +5,7 @@ const { hashPassword, createToken } = require('../supports/encrip')
 module.exports = {
 
     getData: (req, res) => {
-        db.query (
+        db.query(
             `SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
             JOIN role r on u.idrole = r.idrole
             JOIN status s on u.idstatus = s.idstatus;`,
@@ -18,7 +18,6 @@ module.exports = {
             }
         )
     },
-
     register: async (req, res) => {
         try {
             let { username, email, password, idrole, idstatus } = req.body
@@ -70,8 +69,10 @@ module.exports = {
         try {
             if (req.dataUser.iduser) {
                 console.log('ini iduser', req.dataUser.iduser)
-                await dbQuery(`UPDATE users set idstatus=1 WHERE iduser=${db.escape(req.dataUser.iduser)};`)
-                let login = await dbQuery(`SELECT * from users where iduser=${db.escape(req.dataUser.iduser)};`)
+                await dbQuery(`UPDATE users set idstatus=2 WHERE iduser=${db.escape(req.dataUser.iduser)};`)
+                let login = await dbQuery(`SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
+                JOIN role r on u.idrole = r.idrole
+                JOIN status s on u.idstatus = s.idstatus where iduser=${db.escape(req.dataUser.iduser)};`)
                 if (login.length > 0) {
                     let { iduser, username, email, role, status, imageurl } = login[0]
                     let token = createToken({ iduser, username, email, role, status, imageurl })
@@ -96,6 +97,64 @@ module.exports = {
                 message: "Failed",
                 error: error
             });
+        }
+    },
+    login: (req, res, next) => {
+        let { email, password } = req.body
+        let loginSQL =
+            `SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
+        JOIN role r on u.idrole = r.idrole
+        JOIN status s on u.idstatus = s.idstatus
+        where email=${db.escape(email)} AND password=${db.escape(hashPassword(password))};`
+        db.query(loginSQL, (err, results) => {
+            if (err) {
+                res.status(500).send({
+                    success: false,
+                    message: "Failed",
+                    error: err
+                });
+            };
+            if (results.length > 0) {
+                let { iduser, username, email, imageurl, role, status } = results[0]
+                let token = createToken({ iduser, username, email, imageurl, role, status })
+                res.status(200).send({
+                    success: true,
+                    message: "Login Success",
+                    dataLogin: { username, email, imageurl, role, status, token },
+                    err: ""
+                })
+            } else {
+                res.status(401).send({
+                    success: false,
+                    message: "Login Failed",
+                    dataLogin: {},
+                    err: ""
+                })
+            }
+        })
+    },
+    keepLogin: async (req, res) => {
+        try {
+            if (req.dataUser.iduser) {
+                let keepLoginScript = await dbQuery(`SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
+            JOIN role r on u.idrole = r.idrole
+            JOIN status s on u.idstatus = s.idstatus
+            WHERE iduser=${db.escape(req.dataUser.iduser)};`)
+                let { iduser, username, email, password, imageurl, role, status } = keepLoginScript[0]
+                let token = createToken({ iduser, username, email, password, imageurl, role, status })
+                res.status(200).send({
+                    message: 'Keep Login Success',
+                    success: true,
+                    dataKeepLogin: { username, email, password, imageurl, role, status, token }
+                })
+            }
+        } catch (error) {
+            console.log('error keep login : ', error)
+            res.status(500).send({
+                success: false,
+                message: 'Keep Failed',
+                error
+            })
         }
     }
 }
