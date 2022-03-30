@@ -7,11 +7,11 @@ module.exports = {
             let filterQuery = []
             for (let prop in req.query) {
                 if (prop != '_sort' && prop != '_order') {
-                    filterQuery.push(`${prop == 'nama' ? `p.${prop}` : prop} LIKE "%${req.query[prop]}%"`)
+                    filterQuery.push(`${prop == 'nama'||'idproduct' ? `p.${prop}` : prop} LIKE "%${req.query[prop]}%"`)
                 }
             }
             let { _sort, _order, status } = req.query
-            let getSql = `Select p.* from products p join status s on p.idstatus = s.idstatus WHERE s.idstatus=${status ? `${db.escape(status)}` : 2} ${filterQuery.length > 0 ? `AND ${filterQuery.join(" AND ")}` : ''} ${_sort && _order ? `ORDER BY ${_sort} ${_order}` : ''}`
+            let getSql = `Select p.*,c.category from products p join status s on p.idstatus = s.idstatus join category c on p.idcategory=c.idcategory WHERE s.idstatus=${status ? `${db.escape(status)}` : 2} ${filterQuery.length > 0 ? `AND ${filterQuery.join(" AND ")}` : ''} ${_sort && _order ? `ORDER BY ${_sort} ${_order}` : ''}`
             let resultsProducts = await dbQuery(getSql)
             let resultsImages = await dbQuery(`Select * from images`)
             let resultsStocks = await dbQuery(`select * from stocks`)
