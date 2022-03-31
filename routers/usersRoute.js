@@ -9,6 +9,6 @@ router.post('/login', usersController.login)
 router.get('/keeplogin', readToken, usersController.keepLogin);
 router.post('/forgot', usersController.forgotPassword);
 router.post('/reset', readToken, usersController.resetPassword);
-
+router.post('/changepassword', readToken, usersController.changePassword);
 
 module.exports = router
