@@ -20,7 +20,7 @@ module.exports = {
                     error: err
                 })
             }
-            console.log('ini decode', decode)
+            console.log('ini decode', decode, "asdfgh")
             req.dataUser = decode
 
             next()

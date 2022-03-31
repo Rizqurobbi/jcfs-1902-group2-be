@@ -7,5 +7,8 @@ router.post('/register', usersController.register);
 router.get('/verify', readToken, usersController.verify)
 router.post('/login', usersController.login)
 router.get('/keeplogin', readToken, usersController.keepLogin);
+router.post('/forgot', usersController.forgotPassword);
+router.post('/reset', readToken, usersController.resetPassword);
+
 
 module.exports = router
