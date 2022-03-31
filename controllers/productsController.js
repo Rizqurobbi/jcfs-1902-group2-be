@@ -132,5 +132,17 @@ module.exports = {
             })
         }
     },
-   
+    deleteProducts : async (req,res) =>{
+        try {
+            let deleteSQL = await dbQuery(`UPDATE products SET idstatus = 3 WHERE idproduct =${db.escape(req.params.id)}`)
+            res.status(200).send(console.log(deleteSQL))
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed ❌",
+                error: error
+            })
+        }
+    }
 }
