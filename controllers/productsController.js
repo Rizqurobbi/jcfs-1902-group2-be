@@ -15,14 +15,12 @@ module.exports = {
             let resultsProducts = await dbQuery(getSql)
             let resultsImages = await dbQuery(`Select * from images`)
             let resultsStocks = await dbQuery(`select * from stocks`)
-            // let resultsUnit = await dbQuery(`select * from stocks s join unit u on s.idunit=u.idunit`)
             console.log('Before', filterQuery)
             console.log('After', filterQuery.join(' AND '))
             console.log('Combined Script', getSql);
             resultsProducts.forEach((value, index) => {
                 value.images = []
                 value.stocks = []
-                // value.unit = []
                 resultsImages.forEach(val => {
                     if (value.idproduct == val.idproduct) {
                         delete val.idproduct
