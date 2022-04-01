@@ -1,6 +1,6 @@
-const express = require('express');
 const dotenv = require('dotenv');
 dotenv.config();
+const express = require('express');
 const app = express();
 const cors = require('cors');
 const bearerToken = require("express-bearer-token");
