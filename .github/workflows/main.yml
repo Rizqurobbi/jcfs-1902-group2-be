@@ -1,0 +1,30 @@
+# Konfigurasi Continuos Deployment
+name : CD JCFS1902-FARMACIA-GROUP2 API
+
+on : 
+  push :
+    branches :
+      - develop
+      
+jobs :
+  cd:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Deploy Attendance API with github action
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{secrets.SSH_HOST}}
+          username: ${{secrets.SSH_USER}}
+          key: ${{secrets.SSH_KEY}}
+          port: 22
+          script: |
+            cd JCFS_1902/jcfs-1902-group2-be
+            git checkout develop
+            git add .
+            git commit -m "FAR-00-server : server update file at public"
+            git pull origin develop
+            npm install
+            pm2 restart farmacia-group2-jcwd1902
