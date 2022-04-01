@@ -132,10 +132,45 @@ module.exports = {
             })
         }
     },
-    deleteProducts : async (req,res) =>{
+    deleteProduct: async (req, res) => {
         try {
             let deleteSQL = await dbQuery(`UPDATE products SET idstatus = 3 WHERE idproduct =${db.escape(req.params.id)}`)
-            res.status(200).send(console.log(deleteSQL))
+            res.status(200).send(deleteSQL)
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed ❌",
+                error: error
+            })
+        }
+    },
+    editProduct: async (req, res) => {
+        try {
+            const uploadFile = uploader('/imgProducts', 'IMGPRO').array('Images', 5)
+            uploadFile(req, res, async (error) => {
+                try {
+                    let { images, stocks, idcategory, idunit, nama, berat, harga, deskripsi, penyajian, dosis, caraPenyimpanan, kegunaan, komposisi, efekSamping } = JSON.parse(req.body.data)
+                    console.log(JSON.parse(req.body.data))
+                    let editSQL = await dbQuery(`UPDATE products SET idcategory =${idcategory},idunit=${idunit},nama='${nama}',berat=${berat},harga=${harga},deskripsi='${deskripsi}',penyajian='${penyajian}',dosis='${dosis}',caraPenyimpanan='${caraPenyimpanan}',kegunaan='${kegunaan}',komposisi='${komposisi}',efekSamping='${efekSamping}' WHERE idproduct = ${db.escape(req.params.id)}`)
+                    if (req.files) {
+                        for (let i = 0; i < req.files.length; i++) {
+                            await dbQuery(`UPDATE images set url ='http://localhost:2000/imgProducts/${req.files[i].filename}' WHERE idproduct =${db.escape(req.params.id)}`)
+                        }
+                    } else {
+                        await dbQuery(`UPDATE images set url ='${images.url}' WHERE idimage =${db.escape(req.params.id)}`)
+                    }
+                    res.status(200).send(editSQL)
+                } catch (error) {
+                    console.log(error);
+                    req.files.forEach(val => fs.unlinkSync(`./public/imgProducts/${val.filename}`))
+                    res.status(500).send({
+                        success: false,
+                        message: 'Failed ❌',
+                        error
+                    })
+                }
+            })
         } catch (error) {
             console.log(error)
             res.status(500).send({
