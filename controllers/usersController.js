@@ -61,7 +61,7 @@ module.exports = {
             res.status(500).send({
                 success: false,
                 message: "Failed",
-                error: err
+                error: error
             })
         }
     },
@@ -205,6 +205,34 @@ module.exports = {
                         error: ""
                     })
                 }
+            } else {
+                res.status(401).send({
+                    success: false,
+                    message: 'Reset Password failed',
+                    dataReset: {},
+                    error: ""
+                })
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed",
+                error: error
+            });
+        }
+    },
+    changePassword: async (req, res) => {
+        try {
+            let { newPassword } = req.body
+            console.log('get data user', req.dataUser.iduser, req.body.newPassword)
+            if (req.dataUser.iduser) {
+                await dbQuery(`UPDATE users set password=${db.escape(hashPassword(newPassword))} WHERE iduser=${db.escape(req.dataUser.iduser)};`)
+                res.status(200).send({
+                    success: true,
+                    message: "Change Password Success",
+                    error: ""
+                })
             } else {
                 res.status(401).send({
                     success: false,
