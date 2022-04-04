@@ -106,7 +106,7 @@ module.exports = {
                     let insertProducts = await dbQuery(`Insert into products values (null,${db.escape(idcategory)},2,${db.escape(idunit)},${db.escape(nama)},${db.escape(berat)},${db.escape(harga)},${db.escape(deskripsi)},${db.escape(penyajian)},${db.escape(dosis)},${db.escape(caraPenyimpanan)},${db.escape(kegunaan)},${db.escape(komposisi)},${db.escape(efekSamping)})`)
                     if (insertProducts.insertId) {
                         for (let i = 0; i < req.files.length; i++) {
-                            await dbQuery(`Insert into images values (null,${insertProducts.insertId},'http://localhost:2000/imgProducts/${req.files[i].filename}')`)
+                            await dbQuery(`Insert into images values (null,${insertProducts.insertId},'/imgProducts/${req.files[i].filename}')`)
                         }
                         await dbQuery(`Insert into stocks values ${stocks.map(val => `(null,${insertProducts.insertId},'${val.type}',${val.qty})`)}`)
                         res.status(200).send(insertProducts)
@@ -153,7 +153,7 @@ module.exports = {
                     let editSQL = await dbQuery(`UPDATE products SET idcategory =${idcategory},idunit=${idunit},nama='${nama}',berat=${berat},harga=${harga},deskripsi='${deskripsi}',penyajian='${penyajian}',dosis='${dosis}',caraPenyimpanan='${caraPenyimpanan}',kegunaan='${kegunaan}',komposisi='${komposisi}',efekSamping='${efekSamping}' WHERE idproduct = ${db.escape(req.params.id)}`)
                     if (req.files) {
                         for (let i = 0; i < req.files.length; i++) {
-                            await dbQuery(`UPDATE images set url ='http://localhost:2000/imgProducts/${req.files[i].filename}' WHERE idproduct =${db.escape(req.params.id)}`)
+                            await dbQuery(`UPDATE images set url ='/imgProducts/${req.files[i].filename}' WHERE idproduct =${db.escape(req.params.id)}`)
                         }
                     } else {
                         await dbQuery(`UPDATE images set url ='${images.url}' WHERE idimage =${db.escape(req.params.id)}`)
