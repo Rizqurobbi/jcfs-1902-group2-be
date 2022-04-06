@@ -44,7 +44,7 @@ module.exports = {
                     let token = createToken({ iduser, username, email, role, status, fullname, gender, age })
                     await transporter.sendMail({
                         from: "Farmacia",
-                        to: "fawwazputrou@gmail.com",
+                        to: `${req.body.email}`,
                         subject: "Confirm Registration Farmacia",
                         html: `<div>
                        <h3>Click link below to verif your account! </h3>
@@ -81,7 +81,7 @@ module.exports = {
                     res.status(200).send({
                         success: true,
                         message: "Login Success",
-                        dataVerify: { username, email, role, status, imageurl, token, fullname, gender, age },
+                        dataVerify: { iduser, username, email, role, status, imageurl, token, fullname, gender, age },
                         error: ""
                     })
                 }
@@ -126,7 +126,7 @@ module.exports = {
                 res.status(200).send({
                     success: true,
                     message: "Login Success",
-                    dataLogin: { username, email, imageurl, role, status, token, fullname, gender, age, address },
+                    dataLogin: { iduser, username, email, imageurl, role, status, token, fullname, gender, age, address },
                     err: ""
                 })
             } else {
@@ -169,7 +169,7 @@ module.exports = {
                 res.status(200).send({
                     message: 'Keep Login Success',
                     success: true,
-                    dataKeepLogin: { username, email, password, imageurl, role, status, token, fullname, gender, age, address }
+                    dataKeepLogin: { iduser, username, email, password, imageurl, role, status, token, fullname, gender, age, address }
                 })
             }
         } catch (error) {
@@ -224,7 +224,7 @@ module.exports = {
                     res.status(200).send({
                         success: true,
                         message: "Login Success",
-                        dataReset: { username, email, role, status, imageurl, token },
+                        dataReset: { iduser, username, email, role, status, imageurl, token },
                         error: ""
                     })
                 }
