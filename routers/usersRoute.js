@@ -7,8 +7,14 @@ router.post('/register', usersController.register);
 router.get('/verify', readToken, usersController.verify)
 router.post('/login', usersController.login)
 router.get('/keeplogin', readToken, usersController.keepLogin);
+
 router.post('/forgot', usersController.forgotPassword);
 router.post('/reset', readToken, usersController.resetPassword);
 router.post('/changepassword', readToken, usersController.changePassword);
+
+router.patch('/editprofile', readToken, usersController.editProfile)
+router.post('/addaddress', readToken, usersController.addAddress)
+router.patch('/editaddress', readToken, usersController.editAddress)
+router.delete('/:id', readToken, usersController.deleteAddress)
 
 module.exports = router
