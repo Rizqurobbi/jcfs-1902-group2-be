@@ -17,4 +17,6 @@ router.post('/addaddress', readToken, usersController.addAddress)
 router.patch('/editaddress', readToken, usersController.editAddress)
 router.delete('/:id', readToken, usersController.deleteAddress)
 
+router.post('/uploadrecipe', readToken, usersController.uploadrecipe)
+
 module.exports = router

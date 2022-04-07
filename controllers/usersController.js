@@ -309,7 +309,7 @@ module.exports = {
     },
     addAddress: async (req, res) => {
         try {
-            if(req.dataUser.iduser) {
+            if (req.dataUser.iduser) {
                 await dbQuery(`INSERT into address values(null, ${req.dataUser.iduser}, '${req.body.address}')`)
                 res.status(200).send({
                     success: true,
@@ -329,7 +329,7 @@ module.exports = {
     editAddress: async (req, res) => {
         try {
             let { address, idaddress } = req.body
-            if(req.dataUser.iduser) {
+            if (req.dataUser.iduser) {
                 await dbQuery(`UPDATE address SET address='${address}' WHERE iduser=${req.dataUser.iduser} AND idaddress=${idaddress};`)
                 res.status(200).send({
                     success: true,
@@ -348,7 +348,7 @@ module.exports = {
     },
     deleteAddress: async (req, res) => {
         try {
-            if(req.dataUser.iduser) {
+            if (req.dataUser.iduser) {
                 await dbQuery(`DELETE from address where idaddress=${req.params.id}`)
                 res.status(200).send({
                     success: true,
@@ -356,6 +356,36 @@ module.exports = {
                     error: ""
                 })
             }
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed ❌",
+                error: error
+            })
+        }
+    },
+    uploadrecipe: async (req, res) => {
+        try {
+            const uploadFile = uploader('/imgRecipe', 'IMGREC').array('Images', 1)
+            uploadFile(req, res, async (error) => {
+                try {
+                    await dbQuery(`INSERT into resep values(null, ${req.dataUser.iduser}, '/imgRecipe/${req.files[0].filename}')`)
+                    res.status(200).send({
+                        success: true,
+                        message: 'insert recipe success',
+                        error: ""
+                    })
+                } catch (error) {
+                    console.log(error);
+                    req.files.forEach(val => fs.unlinkSync(`./public/imgRecipe/${val.filename}`))
+                    res.status(500).send({
+                        success: false,
+                        message: 'Failed ❌',
+                        error
+                    })
+                }
+            })
         } catch (error) {
             console.log(error)
             res.status(500).send({
