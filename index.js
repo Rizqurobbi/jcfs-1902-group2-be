@@ -24,9 +24,10 @@ app.get('/', (req, res) => {
     res.status(200).send("<h2>Farmacia API</h2>")
 })
 // Routes API Setup
-const { usersRoute, productsRoute } = require("./routers");
+const { usersRoute, productsRoute, transactionsRoute } = require("./routers");
 
 app.use('/users', usersRoute);
 app.use('/products',productsRoute);
+app.use('/transactions',transactionsRoute)
 
 app.listen(PORT, () => console.log("Farmacia API Running :", PORT));

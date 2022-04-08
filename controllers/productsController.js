@@ -11,7 +11,7 @@ module.exports = {
                 }
             }
             let { _sort, _order, status } = req.query
-            let getSql = `Select p.*,c.category,u.satuan,s.status from products p join status s on p.idstatus = s.idstatus join category c on p.idcategory=c.idcategory join unit u on p.idunit = u.idunit WHERE s.idstatus=${status ? `${db.escape(status)}` : 2} ${filterQuery.length > 0 ? `AND ${filterQuery.join(" AND ")}` : ''} ${_sort && _order ? `ORDER BY ${_sort} ${_order}` : ''}`
+            let getSql = `Select p.*,c.category,s.status from products p join status s on p.idstatus = s.idstatus join category c on p.idcategory=c.idcategory WHERE s.idstatus=${status ? `${db.escape(status)}` : 2} ${filterQuery.length > 0 ? `AND ${filterQuery.join(" AND ")}` : ''} ${_sort && _order ? `ORDER BY ${_sort} ${_order}` : ''}`
             let resultsProducts = await dbQuery(getSql)
             let resultsImages = await dbQuery(`Select * from images`)
             let resultsStocks = await dbQuery(`select * from stocks`)
@@ -33,14 +33,6 @@ module.exports = {
                         value.stocks.push(val)
                     }
                 })
-                // resultsUnit.forEach(val => {
-                //     delete val.idproduct
-                //     delete val.idstock
-                //     delete val.qty
-                //     delete val.type
-                //     value.unit.push(val)
-
-                // })
             })
             res.status(200).send({
                 success: true,
@@ -103,12 +95,12 @@ module.exports = {
                     console.log("Jangan Null", req.body);
                     console.log('cek uploadFile', req.files);
                     let { idcategory, idunit, nama, berat, harga, deskripsi, penyajian, dosis, caraPenyimpanan, kegunaan, komposisi, efekSamping, stocks } = JSON.parse(req.body.data)
-                    let insertProducts = await dbQuery(`Insert into products values (null,${db.escape(idcategory)},2,${db.escape(idunit)},${db.escape(nama)},${db.escape(berat)},${db.escape(harga)},${db.escape(deskripsi)},${db.escape(penyajian)},${db.escape(dosis)},${db.escape(caraPenyimpanan)},${db.escape(kegunaan)},${db.escape(komposisi)},${db.escape(efekSamping)})`)
+                    let insertProducts = await dbQuery(`Insert into products values (null,${db.escape(idcategory)},2,${db.escape(nama)},${db.escape(harga)},${db.escape(deskripsi)},${db.escape(penyajian)},${db.escape(dosis)},${db.escape(caraPenyimpanan)},${db.escape(kegunaan)},${db.escape(komposisi)},${db.escape(efekSamping)})`)
                     if (insertProducts.insertId) {
                         for (let i = 0; i < req.files.length; i++) {
                             await dbQuery(`Insert into images values (null,${insertProducts.insertId},'/imgProducts/${req.files[i].filename}')`)
                         }
-                        await dbQuery(`Insert into stocks values ${stocks.map(val => `(null,${insertProducts.insertId},'${val.type}',${val.qty})`)}`)
+                        await dbQuery(`Insert into stocks values ${stocks.map(val => `(null,${insertProducts.insertId},${val.idunit},${val.qty},${val.isnetto})`)}`)
                         res.status(200).send(insertProducts)
                     }
                 } catch (error) {
