@@ -1,5 +1,6 @@
 const { dbQuery, db } = require("../supports/database");
 const { uploader } = require('../supports/uploader')
+
 module.exports = {
     getCart: async (req, res) => {
         try {
@@ -93,7 +94,7 @@ module.exports = {
                 error
             })
         }
-    },
+},
     checkout: async (req, res) => {
         try {
             let insertTransactions = await dbQuery(`INSERT INTO transactions values (null,${req.dataUser.iduser},${db.escape(req.body.idaddress)},${db.escape(req.body.invoice)},${db.escape(req.body.date)},${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)})`)
