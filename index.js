@@ -30,7 +30,8 @@ const { usersRoute, productsRoute, transactionsRoute } = require("./routers");
 
 app.use('/users', usersRoute);
 app.use('/products',productsRoute);
-app.use('/transactions',transactionsRoute)
+app.use('/transactions', transactionsRoute)
+
 
 // app.listen(PORT, () => console.log("Farmacia API Running :", PORT));
 https.createServer({
