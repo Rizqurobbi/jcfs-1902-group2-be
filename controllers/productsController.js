@@ -14,7 +14,7 @@ module.exports = {
             let getSql = `Select p.*,c.category,s.status from products p join status s on p.idstatus = s.idstatus join category c on p.idcategory=c.idcategory WHERE s.idstatus=${status ? `${db.escape(status)}` : 2} ${filterQuery.length > 0 ? `AND ${filterQuery.join(" AND ")}` : ''} ${_sort && _order ? `ORDER BY ${_sort} ${_order}` : ''}`
             let resultsProducts = await dbQuery(getSql)
             let resultsImages = await dbQuery(`Select * from images`)
-            let resultsStocks = await dbQuery(`select * from stocks`)
+            let resultsStocks = await dbQuery(`Select s.*,u.satuan from stocks s join unit u on s.idunit = u.idunit`)
             console.log('Before', filterQuery)
             console.log('After', filterQuery.join(' AND '))
             console.log('Combined Script', getSql);
