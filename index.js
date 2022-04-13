@@ -3,6 +3,8 @@ dotenv.config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const https = require('https');
+const fs = require("fs");
 const bearerToken = require("express-bearer-token");
 const { db } = require('./supports/database');
 
@@ -28,6 +30,11 @@ const { usersRoute, productsRoute, transactionsRoute } = require("./routers");
 
 app.use('/users', usersRoute);
 app.use('/products',productsRoute);
-app.use('/transactions',transactionsRoute)
+app.use('/transactions', transactionsRoute)
 
-app.listen(PORT, () => console.log("Farmacia API Running :", PORT));
+
+// app.listen(PORT, () => console.log("Farmacia API Running :", PORT));
+https.createServer({
+    key: fs.readFileSync('./ssl/server.key'),
+    cert: fs.readFileSync('./ssl/server.cert')
+}, app).listen(PORT, () => console.log("Farmacia API Running :", PORT));

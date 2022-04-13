@@ -1,4 +1,6 @@
 const { dbQuery, db } = require("../supports/database");
+const { uploader } = require('../supports/uploader')
+
 module.exports = {
     getCart: async (req, res) => {
         try {
@@ -126,6 +128,38 @@ module.exports = {
             res.status(500).send({
                 success: false,
                 message: 'failed ❌',
+                error
+            })
+        }
+    },
+    getTransactions: async (req, res) => {
+        try {
+            let getTransactions = await dbQuery(`SELECT * from transactions where iduser = ${req.dataUser.iduser};`)
+            let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes, d.*, i.url, p.nama, p.harga from detail_transactions d
+            JOIN products p ON p.idproduct = d.idproduct 
+            JOIN images i on p.idproduct = i.idproduct
+            JOIN transactions t on t.idtransaction = d.idtransaction WHERE iduser = ${req.dataUser.iduser}; `)
+            getTransactions.forEach((value) => {
+                value.detail = [];
+                getDetail.forEach(val => {
+                    if (val.idtransaction == value.idtransaction) {
+                        value.detail.push(val);
+                    }
+                })
+            })
+            console.log('transaction', getTransactions.detail)
+            console.log('detail', getDetail)
+            res.status(200).send({
+                success: true,
+                message: 'Get Transactions success',
+                dataTransaction: getTransactions,
+                error: ""
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed",
                 error
             })
         }
