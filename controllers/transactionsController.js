@@ -27,7 +27,6 @@ module.exports = {
     addToCart: async (req, res) => {
         try {
             let getSQL = await dbQuery(`SELECT c.*,s.qty as stock_qty from carts c JOIN stocks s on c.idstock=s.idstock where c.idproduct = ${req.body.idproduct} and c.idstock = ${req.body.idstock} and c.iduser = ${db.escape(req.dataUser.iduser)}`)
-
             if (getSQL.length > 0) {
                 console.log('Tes', getSQL[0])
                 if (getSQL[0].qty + req.body.qty <= getSQL[0].stock_qty) {
@@ -63,7 +62,7 @@ module.exports = {
     },
     deleteCart: async (req, res) => {
         try {
-            await dbQuery(`DELETE FROM carts WHERE idcart =${req.params.idcart}`)
+            await dbQuery(`DELETE FROM carts WHERE idcart =${req.params.id}`)
             res.status(200).send({
                 success: true,
                 message: 'Delete Cart Success',
@@ -97,10 +96,32 @@ module.exports = {
     },
     checkout: async (req, res) => {
         try {
-            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null,${req.dataUser.iduser},${db.escape(req.body.idaddress)},${db.escape(req.body.invoice)},${db.escape(req.body.date)},${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)})`)
-            console.log(req.body)
+            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null,${req.dataUser.iduser},${db.escape(req.body.idaddress)},${db.escape(req.body.invoice)},now(),${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)},'ongoing',null)`)
+            console.log(req.body.detail)
             if (insertTransactions.insertId) {
-                let generateInsert = req.body.detail.map(val => `(null,${insertTransactions.insertId},${val.idproduct},${val.qty},${val.subtotal})`)
+                await dbQuery(`DELETE from carts WHERE iduser=${req.dataUser.iduser}`)
+                let getCart = await dbQuery(`Select c.*,p.nama,ct.category,p.harga,s.qty as stock_qty,p.harga * c.qty as total_harga, i.url from carts c
+                JOIN products p on c.idproduct = p.idproduct
+                JOIN category ct on ct.idcategory = p.idcategory
+                JOIN images i on p.idproduct = i.idproduct
+                JOIN stocks s on c.idstock = s.idstock where c.iduser = ${db.escape(req.dataUser.iduser)} `)
+                getCart.forEach(async (value, index) => {
+                    let resultsStocks = await dbQuery(`Select s.*,u.satuan from stocks s join unit u on s.idunit = u.idunit where idproduct = ${value.idproduct}`)
+                    let sisaStock = resultsStocks[0].qty - value.qty
+                    let totalPerkalian = sisaStock * resultsStocks[1].qty
+                    console.log('cek stok', totalPerkalian)
+                    console.log('cek cuk', sisaStock)
+                    console.log('cek cuk', resultsStocks[2].idstock)
+                    await dbQuery(`UPDATE stocks set qty = ${sisaStock} where idstock = ${value.idstock}`)
+                    await dbQuery(`UPDATE stocks set qty = ${totalPerkalian} where idstock = ${resultsStocks[2].idstock}`)     
+                })
+                let generateDetail = req.body.detail.map(val => `(null,${insertTransactions.insertId},${val.idproduct},${val.qty},${val.total_harga})`)
+                await dbQuery(`INSERT INTO detail_transactions values ${generateDetail.toString()};`)
+                res.status(200).send({
+                    success: true,
+                    message: 'Checkout Success',
+                    error: ''
+                })
             }
         } catch (error) {
             console.log(error)
