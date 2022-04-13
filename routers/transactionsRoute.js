@@ -9,6 +9,8 @@ router.delete('/carts/:id',readToken,transactionsController.deleteCart)
 router.patch('/carts/:id',readToken,transactionsController.updateQty)
 
 router.get('/usertransactions', readToken, transactionsController.getTransactions)
+router.get('/recipe', transactionsController.getRecipe)
+router.patch('/editstatusrecipe', transactionsController.editStatusRecipe)
 
 
 module.exports = router

@@ -94,7 +94,7 @@ module.exports = {
                 error
             })
         }
-},
+    },
     checkout: async (req, res) => {
         try {
             let insertTransactions = await dbQuery(`INSERT INTO transactions values (null,${req.dataUser.iduser},${db.escape(req.body.idaddress)},${db.escape(req.body.invoice)},${db.escape(req.body.date)},${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)})`)
@@ -139,6 +139,63 @@ module.exports = {
             res.status(500).send({
                 success: false,
                 message: "Failed",
+                error
+            })
+        }
+    },
+    getRecipe: async (req, res) => {
+        try {
+            let getRecipe = await dbQuery(`SELECT u.fullname, u.idaddress, r.* FROM jcfs1902group2.resep r
+            JOIN users u on u.iduser = r.iduser;`)
+            res.status(200).send({
+                success: true,
+                message: 'Get User Recipe success',
+                dataRecipe: getRecipe,
+                error: ""
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed",
+                error
+            })
+        }
+    },
+    checkoutRecipe: async(req, res) => {
+        try {
+            let { iduser, idaddress, invoice, date, detail, total_price, shipping, total_payment, notes } = req.body
+            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null, ${iduser}, ${db.escape(idaddress)}, ${db.escape(invoice)}, ${db.escape(date)},${db.escape(total_price)},${db.escape(shipping)},${db.escape(total_payment)},${db.escape(notes)})`)
+            if (insertTransactions.insertId) {
+                await dbQuery(`INSERT INTO detail_transactions values ${detail.map((val)=> `(null, ${insertTransactions.insertId}, ${val.idproduct}, ${val.qty}, ${val.total_harga})`)};`)
+                res.status(200).send({
+                    success: true,
+                    message: 'Checkout Success',
+                    error: ""
+                })
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed",
+                error
+            })
+        }
+    },
+    editStatusRecipe: async (req, res) => {
+        try {
+            await dbQuery(`UPDATE resep SET status='${req.body.status}' where idresep=${req.body.idresep}`)
+            res.status(200).send({
+                success: true,
+                message: "Update status success",
+                error: ''
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: 'failed ❌',
                 error
             })
         }
