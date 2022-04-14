@@ -99,7 +99,6 @@ module.exports = {
             let insertTransactions = await dbQuery(`INSERT INTO transactions values (null,${req.dataUser.iduser},${db.escape(req.body.idaddress)},${db.escape(req.body.invoice)},now(),${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)},'ongoing',null)`)
             console.log(req.body.detail)
             if (insertTransactions.insertId) {
-                await dbQuery(`DELETE from carts WHERE iduser=${req.dataUser.iduser}`)
                 let getCart = await dbQuery(`Select c.*,p.nama,ct.category,p.harga,s.qty as stock_qty,p.harga * c.qty as total_harga, i.url from carts c
                 JOIN products p on c.idproduct = p.idproduct
                 JOIN category ct on ct.idcategory = p.idcategory
@@ -113,7 +112,39 @@ module.exports = {
                     console.log('cek cuk', sisaStock)
                     console.log('cek cuk', resultsStocks[2].idstock)
                     await dbQuery(`UPDATE stocks set qty = ${sisaStock} where idstock = ${value.idstock}`)
-                    await dbQuery(`UPDATE stocks set qty = ${totalPerkalian} where idstock = ${resultsStocks[2].idstock}`)     
+                    await dbQuery(`UPDATE stocks set qty = ${totalPerkalian} where idstock = ${resultsStocks[2].idstock}`)
+                })
+                let generateDetail = req.body.detail.map(val => `(null,${insertTransactions.insertId},${val.idproduct},${val.qty},${val.total_harga})`)
+                await dbQuery(`INSERT INTO detail_transactions values ${generateDetail.toString()};`)
+                await dbQuery(`DELETE from carts WHERE iduser=${req.dataUser.iduser}`)
+                res.status(200).send({
+                    success: true,
+                    message: 'Checkout Success',
+                    error: ''
+                })
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: 'failed ❌',
+                error
+            })
+        }
+    },
+    checkoutRecipe: async (req, res) => {
+        try {
+            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null,${req.body.iduser},${db.escape(req.body.idaddress)},${db.escape(req.body.invoice)},now(),${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)},'Waiting for payment',null)`)
+            if (insertTransactions.insertId) {
+                req.body.detail.forEach(async (value) => {
+                    let resultsStocks = await dbQuery(`Select s.*, u.satuan from stocks s join unit u on s.idunit = u.idunit where idproduct = ${value.idproduct};`)
+                    let sisaJumlahStockNetto = resultsStocks[2].qty - value.qty
+                    await dbQuery(`UPDATE stocks set qty = ${sisaJumlahStockNetto} where idstock = ${resultsStocks[2].idstock}`)
+                    let sisaStockNow = resultsStocks[0].qty * resultsStocks[1].qty
+                    if (sisaJumlahStockNetto < sisaStockNow) {
+                        let sisaStockBotol = resultsStocks[0].qty - Math.ceil((resultsStocks[0].qty - (sisaJumlahStockNetto / resultsStocks[1].qty)))
+                        await dbQuery(`UPDATE stocks set qty = ${sisaStockBotol} where idstock = ${resultsStocks[0].idstock}`)
+                    }
                 })
                 let generateDetail = req.body.detail.map(val => `(null,${insertTransactions.insertId},${val.idproduct},${val.qty},${val.total_harga})`)
                 await dbQuery(`INSERT INTO detail_transactions values ${generateDetail.toString()};`)
@@ -183,28 +214,24 @@ module.exports = {
             })
         }
     },
-    checkoutRecipe: async(req, res) => {
+    editStatusRecipe: async (req, res) => {
         try {
-            let { iduser, idaddress, invoice, date, detail, total_price, shipping, total_payment, notes } = req.body
-            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null, ${iduser}, ${db.escape(idaddress)}, ${db.escape(invoice)}, ${db.escape(date)},${db.escape(total_price)},${db.escape(shipping)},${db.escape(total_payment)},${db.escape(notes)})`)
-            if (insertTransactions.insertId) {
-                await dbQuery(`INSERT INTO detail_transactions values ${detail.map((val)=> `(null, ${insertTransactions.insertId}, ${val.idproduct}, ${val.qty}, ${val.total_harga})`)};`)
-                res.status(200).send({
-                    success: true,
-                    message: 'Checkout Success',
-                    error: ""
-                })
-            }
+            await dbQuery(`UPDATE resep SET status='${req.body.status}' where idresep=${req.body.idresep}`)
+            res.status(200).send({
+                success: true,
+                message: "Update status success",
+                error: ''
+            })
         } catch (error) {
             console.log(error)
             res.status(500).send({
                 success: false,
-                message: "Failed",
+                message: 'failed ❌',
                 error
             })
         }
     },
-    editStatusRecipe: async (req, res) => {
+    discardStatusRecipe: async (req, res) => {
         try {
             await dbQuery(`UPDATE resep SET status='${req.body.status}' where idresep=${req.body.idresep}`)
             res.status(200).send({
