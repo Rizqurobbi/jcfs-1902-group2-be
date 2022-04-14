@@ -10,5 +10,9 @@ router.patch('/carts/:id',readToken,transactionsController.updateQty)
 
 router.post('/checkout',readToken,transactionsController.checkout)
 router.get('/usertransactions', readToken, transactionsController.getTransactions)
+router.get('/recipe', transactionsController.getRecipe)
+router.patch('/editstatusrecipe', transactionsController.editStatusRecipe)
+router.patch('/discardstatusrecipe', transactionsController.discardStatusRecipe)
+router.post('/checkoutrecipe', readToken, transactionsController.checkoutRecipe)
 
 module.exports = router
