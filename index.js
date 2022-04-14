@@ -33,8 +33,8 @@ app.use('/products',productsRoute);
 app.use('/transactions', transactionsRoute)
 
 
-// app.listen(PORT, () => console.log("Farmacia API Running :", PORT));
-https.createServer({
-    key: fs.readFileSync('./ssl/server.key'),
-    cert: fs.readFileSync('./ssl/server.cert')
-}, app).listen(PORT, () => console.log("Farmacia API Running :", PORT));
+app.listen(PORT, () => console.log("Farmacia API Running :", PORT));
+// https.createServer({
+//     key: fs.readFileSync('./ssl/server.key'),
+//     cert: fs.readFileSync('./ssl/server.cert')
+// }, app).listen(PORT, () => console.log("Farmacia API Running :", PORT));
