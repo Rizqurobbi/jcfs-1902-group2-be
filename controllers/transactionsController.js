@@ -134,7 +134,7 @@ module.exports = {
     },
     checkoutRecipe: async (req, res) => {
         try {
-            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null,${req.body.iduser},${db.escape(req.body.idaddress)},${db.escape(req.body.invoice)},now(),${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)},'Waiting for payment',null)`)
+            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null, ${req.body.iduser}, ${db.escape(req.body.idaddress)}, 4, ${db.escape(req.body.invoice)},now(),${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)},'Waiting for payment')`)
             if (insertTransactions.insertId) {
                 req.body.detail.forEach(async (value) => {
                     let resultsStocks = await dbQuery(`Select s.*, u.satuan from stocks s join unit u on s.idunit = u.idunit where idproduct = ${value.idproduct};`)
@@ -165,7 +165,9 @@ module.exports = {
     },
     getTransactions: async (req, res) => {
         try {
-            let getTransactions = await dbQuery(`SELECT * from transactions where iduser = ${req.dataUser.iduser};`)
+            let getTransactions = await dbQuery(`SELECT t.*, s.status, a.address FROM transactions t
+            JOIN status s on s.idstatus = t.idstatus
+            JOIN address a on a.idaddress = t.idaddress where t.iduser = ${req.dataUser.iduser};`)
             let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes, d.*, i.url, p.nama, p.harga from detail_transactions d
             JOIN products p ON p.idproduct = d.idproduct 
             JOIN images i on p.idproduct = i.idproduct
@@ -245,6 +247,36 @@ module.exports = {
                 success: false,
                 message: 'failed ❌',
                 error
+            })
+        }
+    },
+    uploadPayment: async (req, res) => {
+        try {
+            const uploadFile = uploader('/imgPayment', 'IMGPAY').array('Images', 1)
+            uploadFile(req, res, async (error) => {
+                try {
+                    await dbQuery(`UPDATE transactions SET payment_url='/imgPayment/${req.files[0].filename}', idstatus = 8 WHERE idtransaction = ${req.body.idtransaction};`)
+                    res.status(200).send({
+                        success: true,
+                        message: 'insert payment upload success',
+                        error: ""
+                    })
+                } catch (error) {
+                    console.log(error);
+                    req.files.forEach(val => fs.unlinkSync(`./public/imgPayment/${val.filename}`))
+                    res.status(500).send({
+                        success: false,
+                        message: 'Failed ❌',
+                        error
+                    })
+                }
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed ❌",
+                error: error
             })
         }
     }
