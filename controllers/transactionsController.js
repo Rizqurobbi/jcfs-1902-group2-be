@@ -96,7 +96,7 @@ module.exports = {
     },
     checkout: async (req, res) => {
         try {
-            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null,${req.dataUser.iduser},${db.escape(req.body.idaddress)},${db.escape(req.body.invoice)},now(),${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)},'ongoing',null)`)
+            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null,${req.dataUser.iduser},${db.escape(req.body.idaddress)},${db.escape(req.body.invoice)},now(),${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)},'Ongoing',null)`)
             console.log(req.body.detail)
             if (insertTransactions.insertId) {
                 let getCart = await dbQuery(`Select c.*,p.nama,ct.category,p.harga,s.qty as stock_qty,p.harga * c.qty as total_harga, i.url from carts c
@@ -148,6 +148,7 @@ module.exports = {
                 })
                 let generateDetail = req.body.detail.map(val => `(null,${insertTransactions.insertId},${val.idproduct},${val.qty},${val.total_harga})`)
                 await dbQuery(`INSERT INTO detail_transactions values ${generateDetail.toString()};`)
+                await dbQuery(`DELETE from carts WHERE iduser=${req.dataUser.iduser}`)
                 res.status(200).send({
                     success: true,
                     message: 'Checkout Success',

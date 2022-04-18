@@ -142,7 +142,7 @@ module.exports = {
                 try {
                     let { images, stocks, idcategory, idunit, nama, berat, harga, deskripsi, penyajian, dosis, caraPenyimpanan, kegunaan, komposisi, efekSamping } = JSON.parse(req.body.data)
                     console.log(JSON.parse(req.body.data))
-                    let editSQL = await dbQuery(`UPDATE products SET idcategory =${idcategory},idunit=${idunit},nama='${nama}',berat=${berat},harga=${harga},deskripsi='${deskripsi}',penyajian='${penyajian}',dosis='${dosis}',caraPenyimpanan='${caraPenyimpanan}',kegunaan='${kegunaan}',komposisi='${komposisi}',efekSamping='${efekSamping}' WHERE idproduct = ${db.escape(req.params.id)}`)
+                    let editSQL = await dbQuery(`UPDATE products SET idcategory =${idcategory},nama='${nama}',harga=${harga},deskripsi='${deskripsi}',penyajian='${penyajian}',dosis='${dosis}',caraPenyimpanan='${caraPenyimpanan}',kegunaan='${kegunaan}',komposisi='${komposisi}',efekSamping='${efekSamping}' WHERE idproduct = ${db.escape(req.params.id)}`)
                     if (req.files) {
                         for (let i = 0; i < req.files.length; i++) {
                             await dbQuery(`UPDATE images set url ='/imgProducts/${req.files[i].filename}' WHERE idproduct =${db.escape(req.params.id)}`)
