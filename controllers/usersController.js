@@ -31,7 +31,7 @@ module.exports = {
 
             let checkEmail = await dbQuery(getSQL)
             if (checkEmail.length > 0) {
-                res.status(400).send({
+                res.status(200).send({
                     success: false,
                     message: "Email exist.",
                     error: ""
@@ -370,7 +370,8 @@ module.exports = {
             const uploadFile = uploader('/imgRecipe', 'IMGREC').array('Images', 1)
             uploadFile(req, res, async (error) => {
                 try {
-                    await dbQuery(`INSERT into resep values(null, ${req.dataUser.iduser}, '/imgRecipe/${req.files[0].filename}')`)
+                    let { invoice } = JSON.parse(req.body.data)
+                    await dbQuery(`INSERT into resep values(null, ${req.dataUser.iduser}, 9, '/imgRecipe/${req.files[0].filename}', '${invoice}', DATE_ADD(now(), INTERVAL 7 HOUR))`)
                     res.status(200).send({
                         success: true,
                         message: 'insert recipe success',
