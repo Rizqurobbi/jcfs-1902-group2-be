@@ -232,6 +232,40 @@ module.exports = {
             })
         }
     },
+    getPastTransactions: async (req, res) => {
+        try {
+            let getTransactions = await dbQuery(`SELECT t.*, s.status, a.address FROM transactions t
+            JOIN status s on s.idstatus = t.idstatus
+            JOIN address a on a.idaddress = t.idaddress where t.iduser = ${req.dataUser.iduser} AND (t.idstatus = 5 or t.idstatus = 6);`)
+            let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes, d.*, i.url, p.nama, p.harga from detail_transactions d
+            JOIN products p ON p.idproduct = d.idproduct 
+            JOIN images i on p.idproduct = i.idproduct
+            JOIN transactions t on t.idtransaction = d.idtransaction WHERE iduser = ${req.dataUser.iduser}; `)
+            getTransactions.forEach((value) => {
+                value.detail = [];
+                getDetail.forEach(val => {
+                    if (val.idtransaction == value.idtransaction) {
+                        value.detail.push(val);
+                    }
+                })
+            })
+            console.log('transaction', getTransactions.detail)
+            console.log('detail', getDetail)
+            res.status(200).send({
+                success: true,
+                message: 'Get Transactions success',
+                dataTransaction: getTransactions,
+                error: ""
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed",
+                error
+            })
+        }
+    },
     discardTransaction: async (req, res) => {
         try {
             await dbQuery(`UPDATE transactions SET idstatus = 6 where idtransaction=${req.body.idtransaction}`)
@@ -251,14 +285,26 @@ module.exports = {
     },
     getRecipe: async (req, res) => {
         try {
-            let getRecipe = await dbQuery(`SELECT u.fullname, u.idaddress, r.* FROM jcfs1902group2.resep r
-            JOIN users u on u.iduser = r.iduser;`)
-            res.status(200).send({
-                success: true,
-                message: 'Get User Recipe success',
-                dataRecipe: getRecipe,
-                error: ""
-            })
+            if (req.dataUser.role === 'User') {
+                let getRecipe = await dbQuery(`SELECT u.fullname, u.idaddress, r.*, s.status FROM jcfs1902group2.resep r
+                    JOIN users u on u.iduser = r.iduser JOIN status s on s.idstatus = r.idstatus where r.iduser =  ${req.dataUser.iduser};`)
+                res.status(200).send({
+                    success: true,
+                    message: 'Get User Recipe success',
+                    dataRecipe: getRecipe,
+                    error: ""
+                })
+            } else {
+                let getRecipe = await dbQuery(`SELECT u.fullname, u.idaddress, r.*, s.status FROM jcfs1902group2.resep r
+                JOIN users u on u.iduser = r.iduser JOIN status s on s.idstatus = r.idstatus where r.idstatus = 9;`)
+                res.status(200).send({
+                    success: true,
+                    message: 'Get User Recipe success',
+                    dataRecipe: getRecipe,
+                    error: ""
+                })
+            }
+
         } catch (error) {
             console.log(error)
             res.status(500).send({
@@ -268,9 +314,10 @@ module.exports = {
             })
         }
     },
+
     editStatusRecipe: async (req, res) => {
         try {
-            await dbQuery(`UPDATE resep SET status='${req.body.status}' where idresep=${req.body.idresep}`)
+            await dbQuery(`UPDATE resep SET idstatus=7 where idresep=${req.body.idresep}`)
             res.status(200).send({
                 success: true,
                 message: "Update status success",
@@ -287,7 +334,7 @@ module.exports = {
     },
     discardStatusRecipe: async (req, res) => {
         try {
-            await dbQuery(`UPDATE resep SET status='${req.body.status}' where idresep=${req.body.idresep}`)
+            await dbQuery(`UPDATE resep SET idstatus=6 where idresep=${req.body.idresep}`)
             res.status(200).send({
                 success: true,
                 message: "Update status success",
