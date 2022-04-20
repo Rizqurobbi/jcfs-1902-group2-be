@@ -10,5 +10,8 @@ router.patch('/carts/:id',readToken,transactionsController.updateQty)
 
 router.post('/checkout',readToken,transactionsController.checkout)
 router.get('/usertransactions', readToken, transactionsController.getTransactions)
+router.get('/adminalltransactions', readToken, transactionsController.getAllTransactionsAdmin)
+router.get('/adminongoingtransactions', readToken, transactionsController.getOngoingTransactionsAdmin)
+router.get('/adminpasttransactions', readToken, transactionsController.getPastTransactionsAdmin)
 
 module.exports = router
