@@ -10,8 +10,21 @@ router.patch('/carts/:id',readToken,transactionsController.updateQty)
 
 router.post('/checkout',readToken,transactionsController.checkout)
 router.get('/usertransactions', readToken, transactionsController.getTransactions)
+
 router.get('/adminalltransactions', readToken, transactionsController.getAllTransactionsAdmin)
 router.get('/adminongoingtransactions', readToken, transactionsController.getOngoingTransactionsAdmin)
 router.get('/adminpasttransactions', readToken, transactionsController.getPastTransactionsAdmin)
+
+router.get('/ongoingusertransactions', readToken, transactionsController.getOngoingTransactions)
+router.get('/pastusertransactions', readToken, transactionsController.getPastTransactions)
+router.patch('/discardtransaction', readToken, transactionsController.discardTransaction)
+
+router.get('/recipe', readToken, transactionsController.getRecipe)
+router.patch('/editstatusrecipe', transactionsController.editStatusRecipe)
+router.patch('/discardstatusrecipe', transactionsController.discardStatusRecipe)
+router.post('/checkoutrecipe', readToken, transactionsController.checkoutRecipe)
+
+router.patch('/uploadpayment', readToken, transactionsController.uploadPayment)
+
 
 module.exports = router
