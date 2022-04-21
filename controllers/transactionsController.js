@@ -96,7 +96,8 @@ module.exports = {
     },
     checkout: async (req, res) => {
         try {
-            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null,${req.dataUser.iduser},${db.escape(req.body.idaddress)}, 7, ${db.escape(req.body.invoice)},DATE_ADD(now(), INTERVAL 7 HOUR),${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)}, null)`)
+
+            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null,${req.dataUser.iduser},${db.escape(req.body.idaddress)},4,${db.escape(req.body.invoice)},DATE_ADD(now(),interval 7 hour),${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)},null)`)
             console.log(req.body.detail)
             if (insertTransactions.insertId) {
                 let getCart = await dbQuery(`Select c.*,p.nama,ct.category,p.harga,s.qty as stock_qty,p.harga * c.qty as total_harga, i.url from carts c
@@ -114,7 +115,7 @@ module.exports = {
                     await dbQuery(`UPDATE stocks set qty = ${sisaStock} where idstock = ${value.idstock}`)
                     await dbQuery(`UPDATE stocks set qty = ${totalPerkalian} where idstock = ${resultsStocks[2].idstock}`)
                 })
-                let generateDetail = req.body.detail.map(val => `(null,${insertTransactions.insertId},${val.idproduct},${val.qty},${val.total_harga})`)
+                let generateDetail = req.body.detail.map(val => `(null,${insertTransactions.insertId},${val.idproduct},${val.idstock},${val.qty},${val.total_harga})`)
                 await dbQuery(`INSERT INTO detail_transactions values ${generateDetail.toString()};`)
                 await dbQuery(`DELETE from carts WHERE iduser=${req.dataUser.iduser}`)
                 res.status(200).send({
@@ -146,7 +147,7 @@ module.exports = {
                         await dbQuery(`UPDATE stocks set qty = ${sisaStockBotol} where idstock = ${resultsStocks[0].idstock}`)
                     }
                 })
-                let generateDetail = req.body.detail.map(val => `(null,${insertTransactions.insertId},${val.idproduct},${val.qty},${val.total_harga})`)
+                let generateDetail = req.body.detail.map(val => `(null,${insertTransactions.insertId},${val.idproduct},${val.idstock},${val.qty},${val.total_harga})`)
                 await dbQuery(`INSERT INTO detail_transactions values ${generateDetail.toString()};`)
                 await dbQuery(`DELETE from carts WHERE iduser=${req.dataUser.iduser}`)
                 res.status(200).send({
@@ -203,6 +204,7 @@ module.exports = {
             let getTransactions = await dbQuery(`SELECT t.*, s.status, a.address FROM transactions t
             JOIN status s on s.idstatus = t.idstatus
             JOIN address a on a.idaddress = t.idaddress where t.iduser = ${req.dataUser.iduser} AND (t.idstatus = 4 or t.idstatus = 7 or t.idstatus = 8);`)
+
             let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes, d.*, i.url, p.nama, p.harga from detail_transactions d
             JOIN products p ON p.idproduct = d.idproduct 
             JOIN images i on p.idproduct = i.idproduct
@@ -232,6 +234,41 @@ module.exports = {
             })
         }
     },
+    getAllTransactionsAdmin: async (req, res) => {
+        try {
+            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser ${req.query.nama ? `WHERE u.username LIKE '%${req.query.nama}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date}'` : ''}`)
+            let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, u.username ,t.invoice, t.date, t.shipping, t.total_payment, t.notes, d.*, i.url, p.nama, p.harga from detail_transactions d 
+            JOIN products p ON p.idproduct = d.idproduct 
+            JOIN images i on p.idproduct = i.idproduct
+            JOIN transactions t on t.idtransaction = d.idtransaction
+            JOIN users u ON u.iduser = t.iduser `)
+           
+            getTransactions.forEach((value) => {
+                value.detail = [];
+                getDetail.forEach(val => {
+                    if (val.idtransaction == value.idtransaction) {
+                        value.detail.push(val);
+                    }
+                })
+            })
+
+            // console.log('transaction', getTransactions.detail)
+            // console.log('detail', getDetail)
+            res.status(200).send({
+                success: true,
+                message: 'Get Transactions success',
+                dataTransactionAdmin: getTransactions,
+                error: ""
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed",
+                error
+            })
+        }
+    },
     getPastTransactions: async (req, res) => {
         try {
             let getTransactions = await dbQuery(`SELECT t.*, s.status, a.address FROM transactions t
@@ -241,6 +278,7 @@ module.exports = {
             JOIN products p ON p.idproduct = d.idproduct 
             JOIN images i on p.idproduct = i.idproduct
             JOIN transactions t on t.idtransaction = d.idtransaction WHERE iduser = ${req.dataUser.iduser}; `)
+
             getTransactions.forEach((value) => {
                 value.detail = [];
                 getDetail.forEach(val => {
@@ -249,14 +287,48 @@ module.exports = {
                     }
                 })
             })
-            console.log('transaction', getTransactions.detail)
-            console.log('detail', getDetail)
+
+            // console.log('transaction', getTransactions.detail)
+            // console.log('detail', getDetail)
             res.status(200).send({
                 success: true,
                 message: 'Get Transactions success',
-                dataTransaction: getTransactions,
+                dataTransactionAdmin: getTransactions,
                 error: ""
             })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed",
+                error
+            })
+        }
+    },
+    getOngoingTransactionsAdmin: async (req, res) => {
+        try {
+            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser where (t.idstatus = 4 or t.idstatus = 7 or t.idstatus = 8) ${req.query.nama ? `and u.username LIKE '%${req.query.nama}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date}'` : ''}`)
+            let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, u.username ,t.invoice, t.date, t.shipping, t.total_payment, t.notes, d.*, i.url, p.nama, p.harga from detail_transactions d 
+            JOIN products p ON p.idproduct = d.idproduct 
+            JOIN images i on p.idproduct = i.idproduct
+            JOIN transactions t on t.idtransaction = d.idtransaction
+            JOIN users u ON u.iduser = t.iduser`)
+            getTransactions.forEach((value) => {
+                value.detail = [];
+                getDetail.forEach(val => {
+                    if (val.idtransaction == value.idtransaction) {
+                        value.detail.push(val);
+                    }
+                })
+            })
+            // console.log('transaction', getTransactions.detail)
+            // console.log('detail', getDetail)
+            res.status(200).send({
+                success: true,
+                message: 'Get Transactions success',
+                dataTransactionAdmin: getTransactions,
+                error: ""
+          })
         } catch (error) {
             console.log(error)
             res.status(500).send({
@@ -278,7 +350,7 @@ module.exports = {
             console.log(error)
             res.status(500).send({
                 success: false,
-                message: 'failed ❌',
+                message: "Failed",
                 error
             })
         }
@@ -327,11 +399,12 @@ module.exports = {
             console.log(error)
             res.status(500).send({
                 success: false,
-                message: 'failed ❌',
+                message: "Failed",
                 error
             })
         }
     },
+
     discardStatusRecipe: async (req, res) => {
         try {
             await dbQuery(`UPDATE resep SET idstatus=6 where idresep=${req.body.idresep}`)
@@ -380,4 +453,5 @@ module.exports = {
             })
         }
     }
+
 }
