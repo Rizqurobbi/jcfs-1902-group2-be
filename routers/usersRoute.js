@@ -12,6 +12,7 @@ router.post('/forgot', usersController.forgotPassword);
 router.post('/reset', readToken, usersController.resetPassword);
 router.post('/changepassword', readToken, usersController.changePassword);
 
+router.patch('/chooseaddress', readToken, usersController.chooseAddress)
 router.patch('/editprofile', readToken, usersController.editProfile)
 router.post('/addaddress', readToken, usersController.addAddress)
 router.patch('/editaddress', readToken, usersController.editAddress)

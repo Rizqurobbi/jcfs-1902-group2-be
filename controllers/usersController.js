@@ -3,6 +3,11 @@ const { transporter } = require("../supports/nodemailer")
 const { hashPassword, createToken } = require('../supports/encrip')
 const { uploader } = require('../supports/uploader')
 const fs = require('fs')
+const { default: axios } = require("axios")
+
+axios.defaults.baseURL = 'https://api.rajaongkir.com/starter'
+axios.defaults.headers.common['key'] = 'a53c7f264da34d259c80c753bc6e616f'
+axios.defaults.headers.post['Content-type'] = 'application/x-www-form-urlencoded';
 
 module.exports = {
 
@@ -39,9 +44,12 @@ module.exports = {
             } else {
                 let insertUser = await dbQuery(insertSQL);
                 if (insertUser.insertId) {
-                    let getUser = await dbQuery(`SELECT * from users WHERE iduser=${insertUser.insertId}`)
-                    let { iduser, username, email, role, status, fullname, gender, age } = getUser[0]
-                    let token = createToken({ iduser, username, email, role, status, fullname, gender, age })
+                    let getUser = await dbQuery(`SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
+                    JOIN role r on u.idrole = r.idrole
+                    JOIN status s on u.idstatus = s.idstatus
+                    WHERE iduser=${insertUser.insertId}`)
+                    let { iduser, idaddress, username, email, role, status, fullname, gender, age } = getUser[0]
+                    let token = createToken({ iduser, idaddress, username, email, role, status, fullname, gender, age })
                     await transporter.sendMail({
                         from: "Farmacia",
                         to: `${req.body.email}`,
@@ -76,12 +84,12 @@ module.exports = {
                 JOIN role r on u.idrole = r.idrole
                 JOIN status s on u.idstatus = s.idstatus where iduser=${db.escape(req.dataUser.iduser)};`)
                 if (login.length > 0) {
-                    let { iduser, username, email, role, status, imageurl, fullname, gender, age } = login[0]
-                    let token = createToken({ iduser, username, email, role, status, imageurl, fullname, gender, age })
+                    let { iduser, idaddress, username, email, role, status, imageurl, fullname, gender, age } = login[0]
+                    let token = createToken({ iduser, idaddress, username, email, role, status, imageurl, fullname, gender, age })
                     res.status(200).send({
                         success: true,
                         message: "Login Success",
-                        dataVerify: { iduser, username, email, role, status, imageurl, token, fullname, gender, age },
+                        dataVerify: { iduser, idaddress, username, email, role, status, imageurl, token, fullname, gender, age },
                         error: ""
                     })
                 }
@@ -121,12 +129,12 @@ module.exports = {
                         }
                     })
                 })
-                let { iduser, username, email, imageurl, role, status, fullname, gender, age, address } = loginSQL[0]
-                let token = createToken({ iduser, username, email, imageurl, role, status, fullname, gender, age })
+                let { iduser, idaddress, username, password, email, imageurl, role, status, fullname, gender, age, address } = loginSQL[0]
+                let token = createToken({ iduser, idaddress, username, password, email, imageurl, role, status, fullname, gender, age })
                 res.status(200).send({
                     success: true,
                     message: "Login Success",
-                    dataLogin: { iduser, username, email, imageurl, role, status, token, fullname, gender, age, address },
+                    dataLogin: { iduser, idaddress, username, password, email, imageurl, role, status, token, fullname, gender, age, address },
                     err: ""
                 })
             } else {
@@ -164,12 +172,12 @@ module.exports = {
                     })
                 })
                 console.log('ini isi keeplogin', keepLoginScript)
-                let { iduser, username, email, password, imageurl, role, status, fullname, gender, age, address } = keepLoginScript[0]
-                let token = createToken({ iduser, username, email, password, imageurl, role, status, fullname, gender, age, address })
+                let { iduser, idaddress, username, email, password, imageurl, role, status, fullname, gender, age, address } = keepLoginScript[0]
+                let token = createToken({ iduser, idaddress, username, email, password, imageurl, role, status, fullname, gender, age, address })
                 res.status(200).send({
                     message: 'Keep Login Success',
                     success: true,
-                    dataKeepLogin: { iduser, username, email, password, imageurl, role, status, token, fullname, gender, age, address }
+                    dataKeepLogin: { iduser, idaddress, username, email, password, imageurl, role, status, token, fullname, gender, age, address }
                 })
             }
         } catch (error) {
@@ -183,9 +191,11 @@ module.exports = {
     },
     forgotPassword: async (req, res) => {
         try {
-            let getUser = await dbQuery(`SELECT * from users WHERE email=${db.escape(req.body.email)};`)
-            let { iduser, username, email, role, status } = getUser[0]
-            let token = createToken({ iduser, username, email, role, status })
+            let getUser = await dbQuery(`SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
+            JOIN role r on u.idrole = r.idrole
+            JOIN status s on u.idstatus = s.idstatus WHERE email=${db.escape(req.body.email)};`)
+            let { iduser, idaddress, username, email, password, imageurl, role, status, fullname, gender, age } = getUser[0]
+            let token = createToken({ iduser, idaddress, username, email, password, imageurl, role, status, fullname, gender, age })
             await transporter.sendMail({
                 from: "Farmacia",
                 to: `${req.body.email}`,
@@ -219,12 +229,12 @@ module.exports = {
                 JOIN role r on u.idrole = r.idrole
                 JOIN status s on u.idstatus = s.idstatus where iduser=${db.escape(req.dataUser.iduser)};`)
                 if (login.length > 0) {
-                    let { iduser, username, email, role, status, imageurl, fullname, gender, age } = login[0]
-                    let token = createToken({ iduser, username, email, role, status, imageurl, fullname, gender, age })
+                    let { iduser, idaddress, username, email, role, status, imageurl, fullname, gender, age } = login[0]
+                    let token = createToken({ iduser, idaddress, username, email, role, status, imageurl, fullname, gender, age })
                     res.status(200).send({
                         success: true,
                         message: "Login Success",
-                        dataReset: { iduser, username, email, role, status, imageurl, token },
+                        dataReset: { iduser, idaddress, username, email, role, status, imageurl, token },
                         error: ""
                     })
                 }
@@ -247,18 +257,28 @@ module.exports = {
     },
     changePassword: async (req, res) => {
         try {
-            let { newPassword } = req.body
-            if (req.dataUser.iduser) {
-                await dbQuery(`UPDATE users set password=${db.escape(hashPassword(newPassword))} WHERE iduser=${db.escape(req.dataUser.iduser)};`)
-                res.status(200).send({
-                    success: true,
-                    message: "Change Password Success",
-                    error: ""
-                })
+            let { newPassword, oldPassword } = req.body
+            console.log('oldpass', hashPassword(oldPassword), 'newpass', req.dataUser.password)
+            if (hashPassword(oldPassword) === req.dataUser.password) {
+                if (req.dataUser.iduser) {
+                    await dbQuery(`UPDATE users set password=${db.escape(hashPassword(newPassword))} WHERE iduser=${db.escape(req.dataUser.iduser)};`)
+                    res.status(200).send({
+                        success: true,
+                        message: "Change Password Success",
+                        error: ""
+                    })
+                } else {
+                    res.status(200).send({
+                        success: false,
+                        message: 'Change Password failed',
+                        dataReset: {},
+                        error: ""
+                    })
+                }
             } else {
-                res.status(401).send({
+                res.status(200).send({
                     success: false,
-                    message: 'Reset Password failed',
+                    message: 'Change Password failed',
                     dataReset: {},
                     error: ""
                 })
@@ -310,12 +330,20 @@ module.exports = {
     addAddress: async (req, res) => {
         try {
             if (req.dataUser.iduser) {
-                await dbQuery(`INSERT into address values(null, ${req.dataUser.iduser}, '${req.body.address}')`)
-                res.status(200).send({
-                    success: true,
-                    message: 'Insert new address success',
-                    error: ""
-                })
+                let { address_label, name, handphone, idprovince, idcity, address } = req.body
+                let getProvince = await axios.get(`/province?id=${idprovince}`)
+                let getCity = await axios.get(`/city?id=${idcity}&province=${idprovince}`)
+                if (getProvince && getCity) {
+                    let province = getProvince.data.rajaongkir.results.province
+                    let city = getCity.data.rajaongkir.results.city_name
+                    console.log('getprovince and city', province, city)
+                    await dbQuery(`INSERT into address values(null, ${req.dataUser.iduser}, ${db.escape(address_label)}, ${db.escape(name)}, '${handphone}', '${province}', '${city}', ${db.escape(address)} )`)
+                    res.status(200).send({
+                        success: true,
+                        message: 'Insert new address success',
+                        error: ""
+                    })
+                }
             }
         } catch (error) {
             console.log(error)
@@ -328,14 +356,21 @@ module.exports = {
     },
     editAddress: async (req, res) => {
         try {
-            let { address, idaddress } = req.body
-            if (req.dataUser.iduser) {
-                await dbQuery(`UPDATE address SET address='${address}' WHERE iduser=${req.dataUser.iduser} AND idaddress=${idaddress};`)
-                res.status(200).send({
-                    success: true,
-                    message: 'Update address success',
-                    error: ""
-                })
+            let { idaddress, address_label, name, handphone, idprovince, idcity, address } = req.body
+            let getProvince = await axios.get(`/province?id=${idprovince}`)
+            let getCity = await axios.get(`/city?id=${idcity}&province=${idprovince}`)
+            if (getProvince && getCity) {
+                let province = getProvince.data.rajaongkir.results.province
+                let city = getCity.data.rajaongkir.results.city_name
+                if (req.dataUser.iduser) {
+                    await dbQuery(`UPDATE address SET address_label=${db.escape(address_label)}, nama_penerima=${db.escape(name)}, handphone='${handphone}', province='${province}', city='${city}', address=${db.escape(address)}
+                    WHERE iduser=${req.dataUser.iduser} AND idaddress=${idaddress};`)
+                    res.status(200).send({
+                        success: true,
+                        message: 'Update address success',
+                        error: ""
+                    })
+                }
             }
         } catch (error) {
             console.log(error)
@@ -362,6 +397,25 @@ module.exports = {
                 success: false,
                 message: "Failed ❌",
                 error: error
+            })
+        }
+    },
+    chooseAddress: async (req, res) => {
+        try {
+            let { idaddress } = req.body
+            console.log('ini idaddress', idaddress)
+            await dbQuery(`UPDATE users SET idaddress = ${db.escape(idaddress)} WHERE iduser = ${req.dataUser.iduser};`)
+            res.status(200).send({
+                success: true,
+                message: "Choose Address success",
+                error: ''
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Choose Address Failed",
+                error
             })
         }
     },
