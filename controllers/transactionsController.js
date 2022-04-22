@@ -267,7 +267,7 @@ module.exports = {
             res.status(200).send({
                 success: true,
                 message: 'Get Transactions success',
-                dataTransactionAdmin: getTransactions,
+                dataTransaction: getTransactions,
                 error: ""
             })
         } catch (error) {
