@@ -26,5 +26,8 @@ router.post('/checkoutrecipe', readToken, transactionsController.checkoutRecipe)
 
 router.patch('/uploadpayment', readToken, transactionsController.uploadPayment)
 
+router.get('/indatalog',readToken,transactionsController.inDataLogging)
+router.get('/outdatalog',readToken,transactionsController.outDataLogging)
+
 
 module.exports = router

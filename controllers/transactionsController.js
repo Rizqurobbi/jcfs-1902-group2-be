@@ -164,6 +164,7 @@ module.exports = {
                         let sisaStockBotol = resultsStocks[0].qty - Math.ceil((resultsStocks[0].qty - (sisaJumlahStockNetto / resultsStocks[1].qty)))
                         await dbQuery(`UPDATE stocks set qty = ${sisaStockBotol} where idstock = ${resultsStocks[0].idstock}`)
                     }
+                    await dbQuery(`Insert into out_data_log values (null,${db.escape(insertTransactions.insertId)},${db.escape(value.idproduct)},${db.escape(value.idstock)},${db.escape(value.qty)},'Recipe')`)
                 })
 
                 let generateDetail = req.body.detail.map(val => `(null, ${insertTransactions.insertId}, ${val.idproduct}, ${val.idstock}, ${val.qty}, ${val.total_harga})`)
@@ -503,6 +504,42 @@ module.exports = {
                         error
                     })
                 }
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed ❌",
+                error: error
+            })
+        }
+    },
+    inDataLogging: async (req, res) => {
+        try {
+            let getSQL = await dbQuery(`SELECT * FROM in_data_log`)
+            res.status(200).send({
+                success: true,
+                message: 'insert payment upload success',
+                dataInlog: getSQL,
+                error: "",
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed ❌",
+                error: error
+            })
+        }
+    },
+    outDataLogging: async (req, res) => {
+        try {
+            let getSQL = await dbQuery(`SELECT od.*,u.satuan,i.url FROM out_data_log od join stocks s on od.idstock = s.idstock join unit u on s.idunit = u.idunit join images i on od.idproduct = i.idproduct order by od.idout_data_log asc`)
+            res.status(200).send({
+                success: true,
+                message: 'Out data log success',
+                dataOutlog: getSQL,
+                error: "",
             })
         } catch (error) {
             console.log(error)
