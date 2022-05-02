@@ -164,11 +164,32 @@ module.exports = {
                         let sisaStockBotol = resultsStocks[0].qty - Math.ceil((resultsStocks[0].qty - (sisaJumlahStockNetto / resultsStocks[1].qty)))
                         await dbQuery(`UPDATE stocks set qty = ${sisaStockBotol} where idstock = ${resultsStocks[0].idstock}`)
                     }
-                    await dbQuery(`Insert into out_data_log values (null,${db.escape(insertTransactions.insertId)},${db.escape(value.idproduct)},${db.escape(value.idstock)},${db.escape(value.qty)},'Recipe')`)
                 })
-
+                let getoutDataLogging = await dbQuery(`select * from out_data_log `)
+                let insert = req.body.detail
+                if (getoutDataLogging.length > 0) {
+                    getoutDataLogging.forEach((val1) => {
+                        req.body.detail.forEach((val2, idx) => {
+                            if (val1.description === 'Recipe') {
+                                if (val1.idproduct == val2.idproduct) {
+                                    if (val1.date === val2.date) {
+                                        dbQuery(`UPDATE out_data_log set qty = ${val1.qty + val2.qty} where idout_data_log = ${val1.idout_data_log}`)
+                                        insert.splice(idx, 1)
+                                    }
+                                }
+                            }
+                        })
+                    })
+                    insert.forEach(async (val) => {
+                        await dbQuery(`Insert into out_data_log values (null,${db.escape(insertTransactions.insertId)},${db.escape(val.idproduct)},${db.escape(val.idstock)},${db.escape(val.qty)},'Recipe',${db.escape(val.date)})`)
+                    })
+                } else {
+                    insert.forEach(async (val) => {
+                        await dbQuery(`Insert into out_data_log values (null,${db.escape(insertTransactions.insertId)},${db.escape(val.idproduct)},${db.escape(val.idstock)},${db.escape(val.qty)},'Recipe',${db.escape(val.date)})`)
+                    })
+                }
+                
                 let generateDetail = req.body.detail.map(val => `(null, ${insertTransactions.insertId}, ${val.idproduct}, ${val.idstock}, ${val.qty}, ${val.total_harga})`)
-
                 await dbQuery(`INSERT INTO detail_transactions values ${generateDetail.toString()};`)
                 await dbQuery(`DELETE from carts WHERE iduser=${req.dataUser.iduser}`)
                 res.status(200).send({
