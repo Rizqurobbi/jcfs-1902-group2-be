@@ -165,9 +165,31 @@ module.exports = {
                         await dbQuery(`UPDATE stocks set qty = ${sisaStockBotol} where idstock = ${resultsStocks[0].idstock}`)
                     }
                 })
-
+                let getoutDataLogging = await dbQuery(`select * from out_data_log `)
+                let insert = req.body.detail
+                if (getoutDataLogging.length > 0) {
+                    getoutDataLogging.forEach((val1) => {
+                        req.body.detail.forEach((val2, idx) => {
+                            if (val1.description === 'Recipe') {
+                                if (val1.idproduct == val2.idproduct) {
+                                    if (val1.date === val2.date) {
+                                        dbQuery(`UPDATE out_data_log set qty = ${val1.qty + val2.qty} where idout_data_log = ${val1.idout_data_log}`)
+                                        insert.splice(idx, 1)
+                                    }
+                                }
+                            }
+                        })
+                    })
+                    insert.forEach(async (val) => {
+                        await dbQuery(`Insert into out_data_log values (null,${db.escape(insertTransactions.insertId)},${db.escape(val.idproduct)},${db.escape(val.idstock)},${db.escape(val.qty)},'Recipe',${db.escape(val.date)})`)
+                    })
+                } else {
+                    insert.forEach(async (val) => {
+                        await dbQuery(`Insert into out_data_log values (null,${db.escape(insertTransactions.insertId)},${db.escape(val.idproduct)},${db.escape(val.idstock)},${db.escape(val.qty)},'Recipe',${db.escape(val.date)})`)
+                    })
+                }
+                
                 let generateDetail = req.body.detail.map(val => `(null, ${insertTransactions.insertId}, ${val.idproduct}, ${val.idstock}, ${val.qty}, ${val.total_harga})`)
-
                 await dbQuery(`INSERT INTO detail_transactions values ${generateDetail.toString()};`)
                 await dbQuery(`DELETE from carts WHERE iduser=${req.dataUser.iduser}`)
                 res.status(200).send({
@@ -503,6 +525,42 @@ module.exports = {
                         error
                     })
                 }
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed ❌",
+                error: error
+            })
+        }
+    },
+    inDataLogging: async (req, res) => {
+        try {
+            let getSQL = await dbQuery(`SELECT * FROM in_data_log`)
+            res.status(200).send({
+                success: true,
+                message: 'insert payment upload success',
+                dataInlog: getSQL,
+                error: "",
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed ❌",
+                error: error
+            })
+        }
+    },
+    outDataLogging: async (req, res) => {
+        try {
+            let getSQL = await dbQuery(`SELECT od.*,u.satuan,i.url FROM out_data_log od join stocks s on od.idstock = s.idstock join unit u on s.idunit = u.idunit join images i on od.idproduct = i.idproduct order by od.idout_data_log asc`)
+            res.status(200).send({
+                success: true,
+                message: 'Out data log success',
+                dataOutlog: getSQL,
+                error: "",
             })
         } catch (error) {
             console.log(error)
