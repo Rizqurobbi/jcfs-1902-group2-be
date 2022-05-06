@@ -1,9 +1,11 @@
+const axios = require('axios');
 const router = require('express').Router()
-const axios = require('axios')
+const { readToken } = require('../supports/encrip');
+const req = require('express/lib/request')
 
 axios.defaults.baseURL = 'https://api.rajaongkir.com/starter'
 axios.defaults.headers.common['key'] = 'a53c7f264da34d259c80c753bc6e616f'
-axios.defaults.headers.post['Content-type'] = 'application/x-www-form-urlencoded';
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
 
 router.get('/provinsi', (req, res) => {
     axios.get('/province')
@@ -30,28 +32,47 @@ router.get('/city/:provId', (req, res) => {
         .catch(err => res.send(err))
 })
 
-router.post('/cost', async (req, res) => {
-    try {
-        let response = await axios.post('/cost', {
-            origin: req.body.origin,
-            destination: req.body.destination,
-            weight: req.body.weight,
-            courier: req.body.courier
-        })
+router.post('/ongkir', (req, res) => {
+    console.log('inireqbody', req.body)
+    console.log('test', req.body.origin, req.body.destination, req.body.weight, req.body.courier)
+    axios.post(`/cost`, {
+        origin: req.body.origin,
+        destination: req.body.destination,
+        weight: req.body.weight,
+        courier: req.body.courier
+    }).then(response =>
         res.status(200).send({
             success: true,
-            message: 'get city success',
-            dataCity: response.data.rajaongkir.results,
-            error: ""
-        })
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({
-            success: false,
-            message: "Failed",
-            error
-        })
-    }
+            message: 'get cost success',
+            dataCost: response.data.rajaongkir.results[0]
+        }))
+        .catch(err => res.send(err))
 })
+
+// router.post('/ongkir', async (req, res) => {
+//     try {
+//         console.log('inireqbody', req.body)
+//         console.log('test', req.body.origin, req.body.destination, req.body.weight, req.body.courier)
+//         let response = await axios.post('/cost', {
+//             origin: 455,
+//             destination: 153,
+//             weight: 1000,
+//             courier: "jne"
+//         })
+//         console.log('ini res', response.data.rajaongkir.results[0])
+//         res.status(200).send({
+//             success: true,
+//             message: 'get cost success',
+//             dataCost: response.data.rajaongkir.results[0]
+//         })
+//     } catch (error) {
+//         // console.log(error)
+//         res.status(500).send({
+//             success: false,
+//             message: "Failed",
+//             error,
+//         })
+//     }
+// })
 
 module.exports = router

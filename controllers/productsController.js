@@ -94,13 +94,14 @@ module.exports = {
                 try {
                     console.log("Jangan Null", req.body);
                     console.log('cek uploadFile', req.files);
-                    let { idcategory, idunit, nama, berat, harga, deskripsi, penyajian, dosis, caraPenyimpanan, kegunaan, komposisi, efekSamping, stocks } = JSON.parse(req.body.data)
+                    let { idcategory, idunit, qty, date, nama, berat, harga, deskripsi, penyajian, dosis, caraPenyimpanan, kegunaan, komposisi, efekSamping, stocks } = JSON.parse(req.body.data)
                     let insertProducts = await dbQuery(`Insert into products values (null,${db.escape(idcategory)},2,${db.escape(nama)},${db.escape(harga)},${db.escape(deskripsi)},${db.escape(penyajian)},${db.escape(dosis)},${db.escape(caraPenyimpanan)},${db.escape(kegunaan)},${db.escape(komposisi)},${db.escape(efekSamping)})`)
                     if (insertProducts.insertId) {
                         for (let i = 0; i < req.files.length; i++) {
                             await dbQuery(`Insert into images values (null,${insertProducts.insertId},'/imgProducts/${req.files[i].filename}')`)
                         }
                         await dbQuery(`Insert into stocks values ${stocks.map(val => `(null,${insertProducts.insertId},${val.idunit},${val.qty},${val.isnetto})`)}`)
+                        await dbQuery(`INSERT INTO in_data_log value (null,${insertProducts.insertId}, ${idunit}, ${qty}, ${date}, 'New Product')`)
                         res.status(200).send(insertProducts)
                     }
                 } catch (error) {
@@ -167,6 +168,92 @@ module.exports = {
                 success: false,
                 message: "Failed ❌",
                 error: error
+            })
+        }
+    },
+    outStockRecord: async (req, res) => {
+        try {
+            console.log('inibody', req.body.detail)
+            let getOutDataLog = await dbQuery(`SELECT od.*, u.satuan, i.url, p.nama FROM out_data_log od 
+                    join stocks s on od.idstock = s.idstock 
+                    join unit u on s.idunit = u.idunit 
+                    join images i on od.idproduct = i.idproduct 
+                    join products p on od.idproduct = p.idproduct order by od.idout_data_log asc;`)
+            if (getOutDataLog.length > 0) {
+                getOutDataLog.forEach((val1) => {
+                    req.body.detail.forEach((val2, idx) => {
+                        if (val1.idproduct === val2.idproduct && val1.idstock === val2.idstock) {
+                            if (val1.date === req.body.date) {
+                                console.log('ini qty', val1.qty, val2.qty)
+                                dbQuery(`UPDATE out_data_log set qty = ${val1.qty + val2.qty} where idout_data_log = ${val1.idout_data_log};`)
+                                req.body.detail.splice(idx, 1)
+                            }
+                        }
+                    })
+                })
+                req.body.detail.forEach(async (value) => {
+                    await dbQuery(`Insert into out_data_log values (null,1,${db.escape(value.idproduct)},${db.escape(value.idstock)},${db.escape(value.qty)},'From user cart',${db.escape(req.body.date)})`)
+                })
+            } else {
+                req.body.detail.forEach(async (value) => {
+                    await dbQuery(`Insert into out_data_log values (null,1,${db.escape(value.idproduct)},${db.escape(value.idstock)},${db.escape(value.qty)},'From user cart',${db.escape(req.body.date)})`)
+                })
+            }
+            res.status(200).send({
+                success: true,
+                message: 'Checkout Success',
+                error: ''
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: 'failed ❌',
+                error
+            })
+        }
+    },
+    inStockRecord: async (req, res) => {
+        try {
+            console.log('inibodydariinstock', req.body)
+            let { idproduct, idunit, qty, date } = req.body
+            let insertInDatalog = `Insert into in_data_log values (null, ${db.escape(idproduct)},${db.escape(idunit)},${db.escape(qty)},${db.escape(date)},'Adding new stock')`
+            let getInDataLog = await dbQuery(`SELECT id.*, u.satuan, i.url, p.nama FROM in_data_log id
+            join unit u on id.idunit = u.idunit 
+            join images i on id.idproduct = i.idproduct 
+            join products p on id.idproduct = p.idproduct order by id.idin_data_log asc;`)
+            let getStock = await dbQuery(`Select s.*, u.satuan from stocks s join unit u on s.idunit = u.idunit where idproduct = ${idproduct};`)
+            // console.log('test', getStock)
+            if (getInDataLog.length > 0) {
+                let temp = []
+                getInDataLog.forEach(async (val1) => {
+                    if (val1.date === date) {
+                        if (val1.idproduct == idproduct){
+                            await dbQuery(`UPDATE in_data_log set qty = ${val1.qty + qty} where date = '${date}' AND idproduct = ${idproduct};`)
+                            // await dbQuery(`UPDATE stocks set qty = ${getStock[0].qty + qty} where idstock = ${getStock[0].idstock}`)
+                            // await dbQuery(`UPDATE stocks set qty = ${(getStock[0].qty + qty)} where idstock = ${getStock[2].idstock}`)
+                        } else {
+                            await dbQuery(insertInDatalog)
+                            // await dbQuery(`UPDATE stocks set qty = ${getStock.qty + qty} where idstock = ${idstock}`)
+                        }
+                    } else if (val1.date === date && val1.idstock !== idstock) {
+
+                    } else if (val1.date !== date){
+                        await dbQuery(insertInDatalog)
+                    }
+                })
+            }
+            res.status(200).send({
+                success: true,
+                message: 'Stock in record success',
+                error: ''
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: 'failed ❌',
+                error
             })
         }
     }
