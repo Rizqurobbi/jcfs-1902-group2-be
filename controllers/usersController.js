@@ -337,7 +337,7 @@ module.exports = {
                     let province = getProvince.data.rajaongkir.results.province
                     let city = getCity.data.rajaongkir.results.city_name
                     console.log('getprovince and city', province, city)
-                    await dbQuery(`INSERT into address values(null, ${req.dataUser.iduser}, ${db.escape(address_label)}, ${db.escape(name)}, '${handphone}', '${province}', '${city}', ${db.escape(address)} )`)
+                    await dbQuery(`INSERT into address values(null, ${req.dataUser.iduser}, ${db.escape(idprovince)}, ${db.escape(idcity)},  ${db.escape(address_label)}, ${db.escape(name)}, '${handphone}', '${province}', '${city}', ${db.escape(address)} )`)
                     res.status(200).send({
                         success: true,
                         message: 'Insert new address success',
@@ -362,8 +362,9 @@ module.exports = {
             if (getProvince && getCity) {
                 let province = getProvince.data.rajaongkir.results.province
                 let city = getCity.data.rajaongkir.results.city_name
+                console.log(idprovince, idcity)
                 if (req.dataUser.iduser) {
-                    await dbQuery(`UPDATE address SET address_label=${db.escape(address_label)}, nama_penerima=${db.escape(name)}, handphone='${handphone}', province='${province}', city='${city}', address=${db.escape(address)}
+                    await dbQuery(`UPDATE address SET address_label=${db.escape(address_label)}, idprovince=${db.escape(idprovince)}, idcity=${db.escape(idcity)}, nama_penerima=${db.escape(name)}, handphone='${handphone}', province='${province}', city='${city}', address=${db.escape(address)}
                     WHERE iduser=${req.dataUser.iduser} AND idaddress=${idaddress};`)
                     res.status(200).send({
                         success: true,

@@ -209,7 +209,7 @@ module.exports = {
     },
     getUserTransactions: async (req, res) => {
         try {
-            let getTransactions = await dbQuery(`SELECT t.*, s.status, a.address FROM transactions t
+            let getTransactions = await dbQuery(`SELECT t.*, s.status, a.* FROM transactions t
             JOIN status s on s.idstatus = t.idstatus
             JOIN address a on a.idaddress = t.idaddress where t.iduser = ${req.dataUser.iduser};`)
             let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes, d.*, i.url, p.nama, p.harga, u.satuan from detail_transactions d
@@ -245,7 +245,7 @@ module.exports = {
     },
     getUserOngoingTransactions: async (req, res) => {
         try {
-            let getTransactions = await dbQuery(`SELECT t.*, s.status, a.address FROM transactions t
+            let getTransactions = await dbQuery(`SELECT t.*, s.status, a.* FROM transactions t
             JOIN status s on s.idstatus = t.idstatus
             JOIN address a on a.idaddress = t.idaddress where t.iduser = ${req.dataUser.iduser} AND (t.idstatus = 4 or t.idstatus = 7 or t.idstatus = 8);`)
 
@@ -283,7 +283,7 @@ module.exports = {
     },
     getUserPastTransactions: async (req, res) => {
         try {
-            let getTransactions = await dbQuery(`SELECT t.*, s.status, a.address FROM transactions t
+            let getTransactions = await dbQuery(`SELECT t.*, s.status, a.* FROM transactions t
             JOIN status s on s.idstatus = t.idstatus
             JOIN address a on a.idaddress = t.idaddress where t.iduser = ${req.dataUser.iduser} AND (t.idstatus = 5 or t.idstatus = 6);`)
             let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes, d.*, i.url, p.nama, p.harga, u.satuan from detail_transactions d
@@ -439,7 +439,7 @@ module.exports = {
         try {
             if (req.dataUser.role === 'User') {
                 let getRecipe = await dbQuery(`SELECT u.fullname, u.idaddress, r.*, s.status FROM jcfs1902group2.resep r
-                    JOIN users u on u.iduser = r.iduser JOIN status s on s.idstatus = r.idstatus where r.iduser =  ${req.dataUser.iduser};`)
+                    JOIN users u on u.iduser = r.iduser JOIN status s on s.idstatus = r.idstatus where (r.iduser = ${req.dataUser.iduser} and r.idstatus = 9);`)
                 res.status(200).send({
                     success: true,
                     message: 'Get User Recipe success',
@@ -448,8 +448,10 @@ module.exports = {
                 })
             } else {
                 console.log('ini role', req.dataUser.role)
-                let getRecipe = await dbQuery(`SELECT u.username, u.idaddress, r.*, s.status FROM jcfs1902group2.resep r
-                JOIN users u on u.iduser = r.iduser JOIN status s on s.idstatus = r.idstatus where r.idstatus = 9;`)
+                let getRecipe = await dbQuery(`SELECT u.username, a.*, r.*, s.status FROM jcfs1902group2.resep r
+                JOIN users u on u.iduser = r.iduser 
+                JOIN status s on s.idstatus = r.idstatus
+                JOIN address a on u.idaddress = a.idaddress where r.idstatus = 9;`)
                 console.log('getrecipe', getRecipe)
                 res.status(200).send({
                     success: true,
@@ -537,10 +539,13 @@ module.exports = {
     },
     inDataLogging: async (req, res) => {
         try {
-            let getSQL = await dbQuery(`SELECT * FROM in_data_log`)
+            let getSQL = await dbQuery(`SELECT id.*, u.satuan, i.url, p.nama FROM in_data_log id
+            join unit u on id.idunit = u.idunit 
+            join images i on id.idproduct = i.idproduct 
+            join products p on id.idproduct = p.idproduct order by id.idin_data_log asc;`)
             res.status(200).send({
                 success: true,
-                message: 'insert payment upload success',
+                message: 'get data logging in success',
                 dataInlog: getSQL,
                 error: "",
             })
@@ -548,17 +553,22 @@ module.exports = {
             console.log(error)
             res.status(500).send({
                 success: false,
-                message: "Failed ❌",
+                message: "Failed :x:",
+
                 error: error
             })
         }
     },
     outDataLogging: async (req, res) => {
         try {
-            let getSQL = await dbQuery(`SELECT od.*,u.satuan,i.url FROM out_data_log od join stocks s on od.idstock = s.idstock join unit u on s.idunit = u.idunit join images i on od.idproduct = i.idproduct order by od.idout_data_log asc`)
+            let getSQL = await dbQuery(`SELECT od.*, u.satuan, i.url, p.nama FROM out_data_log od 
+            join stocks s on od.idstock = s.idstock 
+            join unit u on s.idunit = u.idunit 
+            join images i on od.idproduct = i.idproduct 
+            join products p on od.idproduct = p.idproduct order by od.idout_data_log asc`)
             res.status(200).send({
                 success: true,
-                message: 'Out data log success',
+                message: 'get data success',
                 dataOutlog: getSQL,
                 error: "",
             })
