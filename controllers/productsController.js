@@ -213,6 +213,45 @@ module.exports = {
             })
         }
     },
+    outStockRecordRecipe: async (req, res) => {
+        try {
+            let getoutDataLogging = await dbQuery(`select * from out_data_log `)
+            let insert = req.body.detail
+            if (getoutDataLogging.length > 0) {
+                getoutDataLogging.forEach((val1) => {
+                    req.body.detail.forEach((val2, idx) => {
+                        if (val1.description === 'Recipe') {
+                            if (val1.idproduct == val2.idproduct) {
+                                if (val1.date === val2.date) {
+                                    dbQuery(`UPDATE out_data_log set qty = ${val1.qty + val2.qty} where idout_data_log = ${val1.idout_data_log}`)
+                                    insert.splice(idx, 1)
+                                }
+                            }
+                        }
+                    })
+                })
+              insert.forEach(async (val) => {
+                    await dbQuery(`Insert into out_data_log values (null,1,${db.escape(val.idproduct)},${db.escape(val.idstock)},${db.escape(val.qty)},'Recipe',${db.escape(val.date)})`)
+                })
+            } else {
+                insert.forEach(async (val) => {
+                    await dbQuery(`Insert into out_data_log values (null,1,${db.escape(val.idproduct)},${db.escape(val.idstock)},${db.escape(val.qty)},'Recipe',${db.escape(val.date)})`)
+                })
+            }
+           res.status(200).send({
+                success: true,
+                message: 'Checkout Success',
+                error: ''
+            })
+        }catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: 'failed ❌',
+                error
+            })
+        }
+    },
     inStockRecord: async (req, res) => {
         try {
             console.log('inibodydariinstock', req.body)
