@@ -8,4 +8,6 @@ router.get('/unit',productsController.getUnit)
 router.post('/',productsController.addProduct)
 router.delete('/:id',productsController.deleteProduct)
 router.patch('/:id',productsController.editProduct)
+
+router.post('/outstockrecipe', productsController.outStockRecordRecipe)
 module.exports = router
