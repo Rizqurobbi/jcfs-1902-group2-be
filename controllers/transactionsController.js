@@ -509,8 +509,25 @@ module.exports = {
             res.status(500).send({
                 success: false,
                 message: "Failed ❌",
-                error: error
+                error
             })
         }
-    }
+    },
+    salesReport: async (req, res) => {
+        try {
+            let getSalesReport = await dbQuery(`SELECT sr.*,p.nama,i.url FROM sales_report sr join products p on p.idproduct = sr.idproduct join images i on sr.idproduct = i.idproduct ${req.query.start_date && req.query.end_date ? `where sr.date between '${req.query.start_date}' and '${req.query.end_date}'` : ''} order by sr.date asc`)
+            res.status(200).send({
+                success: true,
+                message: 'Get Sales Report Success',
+                dataSalesReport: getSalesReport
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed ❌",
+                error
+            })
+        }
+    },
 }
