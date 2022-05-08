@@ -49,30 +49,4 @@ router.post('/ongkir', (req, res) => {
         .catch(err => res.send(err))
 })
 
-// router.post('/ongkir', async (req, res) => {
-//     try {
-//         console.log('inireqbody', req.body)
-//         console.log('test', req.body.origin, req.body.destination, req.body.weight, req.body.courier)
-//         let response = await axios.post('/cost', {
-//             origin: 455,
-//             destination: 153,
-//             weight: 1000,
-//             courier: "jne"
-//         })
-//         console.log('ini res', response.data.rajaongkir.results[0])
-//         res.status(200).send({
-//             success: true,
-//             message: 'get cost success',
-//             dataCost: response.data.rajaongkir.results[0]
-//         })
-//     } catch (error) {
-//         // console.log(error)
-//         res.status(500).send({
-//             success: false,
-//             message: "Failed",
-//             error,
-//         })
-//     }
-// })
-
 module.exports = router
