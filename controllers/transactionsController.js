@@ -275,7 +275,7 @@ module.exports = {
     },
     getAllTransactionsAdmin: async (req, res) => {
         try {
-            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser ${req.query.invoice ? `WHERE t.invoice LIKE '%${req.query.invoice}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date}'` : ''}`)
+            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status, a.* from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser JOIN address a on a.idaddress = t.idaddress ${req.query.invoice ? `WHERE t.invoice LIKE '%${req.query.invoice}%' or u.username LIKE '%${req.query.invoice}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date}'` : ''}`)
             let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes,t.description, d.*, i.url, p.nama, p.harga, un.satuan from detail_transactions d
             JOIN products p ON p.idproduct = d.idproduct 
             JOIN images i on p.idproduct = i.idproduct
@@ -308,7 +308,7 @@ module.exports = {
     },
     getPastTransactionsAdmin: async (req, res) => {
         try {
-            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser where (t.idstatus = 5 or t.idstatus = 6) ${req.query.invoice ? `and t.invoice LIKE '%${req.query.invoice}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date}'` : ''}`)
+            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status, a.* from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser JOIN address a on a.idaddress = t.idaddress where (t.idstatus = 5 or t.idstatus = 6) ${req.query.invoice ? `and t.invoice LIKE '%${req.query.invoice}%' or u.username LIKE '%${req.query.invoice}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date}'` : ''}`)
             let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes,t.description, d.*, i.url, p.nama, p.harga, un.satuan from detail_transactions d
             JOIN products p ON p.idproduct = d.idproduct 
             JOIN images i on p.idproduct = i.idproduct
@@ -344,7 +344,7 @@ module.exports = {
     },
     getOngoingTransactionsAdmin: async (req, res) => {
         try {
-            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser where (t.idstatus = 4 or t.idstatus = 7 or t.idstatus = 8) ${req.query.invoice ? `and t.invoice LIKE '%${req.query.invoice}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date}'` : ''}`)
+            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status, a.* from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser JOIN address a on a.idaddress = t.idaddress where (t.idstatus = 4 or t.idstatus = 7 or t.idstatus = 8) ${req.query.invoice ? `and t.invoice LIKE '%${req.query.invoice}%' or u.username LIKE '%${req.query.invoice}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date}'` : ''}`)
             let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes,t.description, d.*, i.url, p.nama, p.harga, un.satuan from detail_transactions d
             JOIN products p ON p.idproduct = d.idproduct 
             JOIN images i on p.idproduct = i.idproduct
@@ -630,24 +630,26 @@ module.exports = {
     insertRevenue: async (req, res) => {
         try {
             let insert = req.body.detail
-                let getRevenue = await dbQuery(`Select * from revenue`)
-                if (getRevenue.length > 0) {
-                    getRevenue.forEach((val1) => {
-                        req.body.detail.forEach((val2, idx) => {
-                            if (val1.date == req.body.date) {
-                                dbQuery(`UPDATE revenue set total = ${val1.total + (val2.qty * val2.subtotal)} where idrevenue = ${val1.idrevenue}`)
-                                insert.splice(idx, 1)
-                            }
-                        })
+            let getRevenue = await dbQuery(`Select * from revenue`)
+            console.log('ini data body',insert)
+            if (getRevenue.length > 0) {
+                getRevenue.forEach((val1) => {
+                    req.body.detail.forEach((val2, idx) => {
+                        if (val1.date == req.body.date) {
+                            console.log(val1.date == req.body.date)
+                            dbQuery(`UPDATE revenue set total = ${val1.total + (val2.qty * val2.subtotal)} where idrevenue = ${val1.idrevenue}`)
+                            insert.splice(idx, 1)
+                        }
                     })
-                    insert.forEach(async (val) => {
-                        await dbQuery(`Insert into revenue values (null,${db.escape(req.body.date)},${db.escape(val.subtotal)});`)
-                    })
-                } else {
-                    insert.forEach(async (val) => {
-                        await dbQuery(`Insert into revenue values (null,${db.escape(req.body.date)},${db.escape(val.subtotal)});`)
-                    })
-                }
+                })
+                insert.forEach(async (val) => {
+                    await dbQuery(`Insert into revenue values (null,${db.escape(req.body.date)},${db.escape(val.subtotal)});`)
+                })
+            } else {
+                insert.forEach(async (val) => {
+                    await dbQuery(`Insert into revenue values (null,${db.escape(req.body.date)},${db.escape(val.subtotal)});`)
+                })
+            }
             res.status(200).send({
                 success: true,
                 message: "Update status success",
@@ -662,7 +664,7 @@ module.exports = {
             })
         }
     },
-   confirmTransaction: async (req, res) => {
+    confirmTransaction: async (req, res) => {
         try {
             console.log('test', req.body.detail)
             await dbQuery(`UPDATE transactions SET idstatus=5 where idtransaction=${req.body.idtransaction}`)
@@ -671,9 +673,9 @@ module.exports = {
             if (getSalesReport.length > 0) {
                 getSalesReport.forEach((val1) => {
                     req.body.detail.forEach((val2, idx) => {
-                        console.log('id1 id2',val1.idproduct,val2.idproduct)
-                        console.log('date1 date2',val1.date,req.body.date)
-                        console.log('desc1 desc2',val1.description,val2.description)
+                        console.log('id1 id2', val1.idproduct, val2.idproduct)
+                        console.log('date1 date2', val1.date, req.body.date)
+                        console.log('desc1 desc2', val1.description, val2.description)
                         console.log(val1.idproduct == val2.idproduct && val1.date == req.body.date && val1.description == val2.description)
                         if (val1.idproduct == val2.idproduct && val1.date == req.body.date && val1.description == val2.description) {
                             dbQuery(`UPDATE sales_report set qty = ${val1.qty + val2.qty}, total = ${val1.total + (val2.qty * val2.subtotal)} where idsales_report = ${val1.idsales_report}`)
