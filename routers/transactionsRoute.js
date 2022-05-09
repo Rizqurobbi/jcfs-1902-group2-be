@@ -27,9 +27,12 @@ router.post('/checkoutrecipe', readToken, transactionsController.checkoutRecipe)
 router.patch('/uploadpayment', readToken, transactionsController.uploadPayment)
 
 router.get('/salesreportuser', readToken, transactionsController.salesReportUserCart)
+router.get('/revenue',readToken,transactionsController.getRevenue)
+router.post('/insertrevenue',readToken,transactionsController.insertRevenue)
 router.get('/salesreportrecipe', readToken, transactionsController.salesReportByRecipe)
 router.get('/indatalog', readToken, transactionsController.inDataLogging)
 router.get('/outdatalog', readToken, transactionsController.outDataLogging)
+router.post('/confirmtransaction',readToken,transactionsController.confirmTransaction)
 
 
 module.exports = router
