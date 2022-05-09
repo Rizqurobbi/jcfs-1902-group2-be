@@ -318,7 +318,6 @@ module.exports = {
             JOIN stocks s on s.idstock = d.idstock
             JOIN unit un on un.idunit = s.idunit
             JOIN users u ON u.iduser = t.iduser`)
-
             getTransactions.forEach((value) => {
                 value.detail = [];
                 getDetail.forEach(val => {
@@ -402,6 +401,41 @@ module.exports = {
             if (req.dataUser.role === 'User') {
                 let getRecipe = await dbQuery(`SELECT u.fullname, u.idaddress, r.*, s.status FROM jcfs1902group2.resep r
                     JOIN users u on u.iduser = r.iduser JOIN status s on s.idstatus = r.idstatus where (r.iduser = ${req.dataUser.iduser} and r.idstatus = 9);`)
+                res.status(200).send({
+                    success: true,
+                    message: 'Get User Recipe success',
+                    dataRecipe: getRecipe,
+                    error: ""
+                })
+            } else {
+                console.log('ini role', req.dataUser.role)
+                let getRecipe = await dbQuery(`SELECT u.username, a.*, r.*, s.status FROM jcfs1902group2.resep r
+                JOIN users u on u.iduser = r.iduser 
+                JOIN status s on s.idstatus = r.idstatus
+                JOIN address a on u.idaddress = a.idaddress where r.idstatus = 9;`)
+                console.log('getrecipe', getRecipe)
+                res.status(200).send({
+                    success: true,
+                    message: 'Get User Recipe success',
+                    dataRecipe: getRecipe,
+                    error: ""
+                })
+            }
+
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed",
+                error
+            })
+        }
+    },
+    getRecipeByUser: async (req, res) => {
+        try {
+            if (req.dataUser.role === 'User') {
+                let getRecipe = await dbQuery(`SELECT u.fullname, u.idaddress, r.*, s.status FROM jcfs1902group2.resep r
+                    JOIN users u on u.iduser = r.iduser JOIN status s on s.idstatus = r.idstatus where r.iduser = ${req.dataUser.iduser};`)
                 res.status(200).send({
                     success: true,
                     message: 'Get User Recipe success',
@@ -630,7 +664,7 @@ module.exports = {
             })
         }
     },
-    confirmTransaction: async (req, res) => {
+   confirmTransaction: async (req, res) => {
         try {
             console.log('test', req.body.detail)
             await dbQuery(`UPDATE transactions SET idstatus=5 where idtransaction=${req.body.idtransaction}`)
@@ -672,4 +706,21 @@ module.exports = {
             })
         }
     },
+    rejectTransaction: async (req, res) => {
+        try {
+            await dbQuery(`UPDATE transactions SET idstatus=6 where idtransaction=${req.body.idtransaction}`)
+            res.status(200).send({
+                success: true,
+                message: "Update status success",
+                error: ''
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: 'failed :x:',
+                error
+            })
+        }
+    }
 }

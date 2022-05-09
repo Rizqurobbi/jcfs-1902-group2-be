@@ -20,6 +20,7 @@ router.get('/pastusertransactions', readToken, transactionsController.getUserPas
 router.patch('/discardtransaction', readToken, transactionsController.discardTransaction)
 
 router.get('/recipe', readToken, transactionsController.getRecipe)
+router.get('/recipebyuser', readToken, transactionsController.getRecipeByUser)
 router.patch('/editstatusrecipe', transactionsController.editStatusRecipe)
 router.patch('/discardstatusrecipe', transactionsController.discardStatusRecipe)
 router.post('/checkoutrecipe', readToken, transactionsController.checkoutRecipe)
@@ -34,5 +35,7 @@ router.get('/indatalog', readToken, transactionsController.inDataLogging)
 router.get('/outdatalog', readToken, transactionsController.outDataLogging)
 router.post('/confirmtransaction',readToken,transactionsController.confirmTransaction)
 
+router.post('/confirmtransaction',readToken,transactionsController.confirmTransaction)
+router.post('/rejecttransaction',readToken,transactionsController.rejectTransaction)
 
 module.exports = router
