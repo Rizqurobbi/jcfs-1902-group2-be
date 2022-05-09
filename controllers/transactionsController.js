@@ -180,8 +180,6 @@ module.exports = {
                     }
                 })
             })
-            console.log('transaction', getTransactions.detail)
-            console.log('detail', getDetail)
             res.status(200).send({
                 success: true,
                 message: 'Get Transactions success',
@@ -204,7 +202,6 @@ module.exports = {
             JOIN address a on a.idaddress = t.idaddress where t.iduser = ${req.dataUser.iduser} AND (t.idstatus = 4 or t.idstatus = 7 or t.idstatus = 8);`)
 
             let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes, d.*, i.url, p.nama, p.harga, u.satuan from detail_transactions d
-
             JOIN products p ON p.idproduct = d.idproduct 
             JOIN images i on p.idproduct = i.idproduct
             JOIN transactions t on t.idtransaction = d.idtransaction
@@ -218,8 +215,6 @@ module.exports = {
                     }
                 })
             })
-            console.log('transaction', getTransactions.detail)
-            console.log('detail', getDetail)
             res.status(200).send({
                 success: true,
                 message: 'Get Transactions success',
@@ -255,9 +250,6 @@ module.exports = {
                     }
                 })
             })
-
-            // console.log('transaction', getTransactions.detail)
-            // console.log('detail', getDetail)
             res.status(200).send({
                 success: true,
                 message: 'Get Transactions success',
@@ -324,9 +316,6 @@ module.exports = {
                     }
                 })
             })
-
-            // console.log('transaction', getTransactions.detail)
-            // console.log('detail', getDetail)
             res.status(200).send({
                 success: true,
                 message: 'Get Transactions success',
@@ -360,8 +349,6 @@ module.exports = {
                     }
                 })
             })
-            // console.log('transaction', getTransactions.detail)
-            // console.log('detail', getDetail)
             res.status(200).send({
                 success: true,
                 message: 'Get Transactions success',
@@ -379,7 +366,20 @@ module.exports = {
     },
     discardTransaction: async (req, res) => {
         try {
-            await dbQuery(`UPDATE transactions SET idstatus = 6 where idtransaction=${req.body.idtransaction}`)
+            console.log('alsjdhaks')
+            let { idtransaction, detail } = req.body
+            console.log(idtransaction, detail)
+            detail.forEach( async (val1) => {
+                let getStock = await dbQuery(`SELECT * from stocks where idproduct = ${val1.idproduct}`)
+                console.log(getStock)
+                getStock.forEach(async (val2) => {
+                    if (val1.idstock == val2.idstock) {
+                        console.log('test', val1.qty + val2.qty, val2.idstock)
+                        await dbQuery(`UPDATE stocks SET qty=${val1.qty + val2.qty} where idstock = ${val2.idstock}`)
+                    }
+                })
+            })
+            await dbQuery(`UPDATE transactions SET idstatus = 6 where idtransaction=${idtransaction}`)
             res.status(200).send({
                 success: true,
                 message: "Update status success",
@@ -631,12 +631,11 @@ module.exports = {
         try {
             let insert = req.body.detail
             let getRevenue = await dbQuery(`Select * from revenue`)
-            console.log('ini data body',insert)
+
             if (getRevenue.length > 0) {
                 getRevenue.forEach((val1) => {
                     req.body.detail.forEach((val2, idx) => {
                         if (val1.date == req.body.date) {
-                            console.log(val1.date == req.body.date)
                             dbQuery(`UPDATE revenue set total = ${val1.total + (val2.qty * val2.subtotal)} where idrevenue = ${val1.idrevenue}`)
                             insert.splice(idx, 1)
                         }
