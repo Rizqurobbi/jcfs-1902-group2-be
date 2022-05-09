@@ -230,7 +230,7 @@ module.exports = {
                         }
                     })
                 })
-              insert.forEach(async (val) => {
+                insert.forEach(async (val) => {
                     await dbQuery(`Insert into out_data_log values (null,1,${db.escape(val.idproduct)},${db.escape(val.idstock)},${db.escape(val.qty)},'Recipe',${db.escape(val.date)})`)
                 })
             } else {
@@ -238,12 +238,12 @@ module.exports = {
                     await dbQuery(`Insert into out_data_log values (null,1,${db.escape(val.idproduct)},${db.escape(val.idstock)},${db.escape(val.qty)},'Recipe',${db.escape(val.date)})`)
                 })
             }
-           res.status(200).send({
+            res.status(200).send({
                 success: true,
                 message: 'Checkout Success',
                 error: ''
             })
-        }catch (error) {
+        } catch (error) {
             console.log(error)
             res.status(500).send({
                 success: false,
@@ -255,32 +255,25 @@ module.exports = {
     inStockRecord: async (req, res) => {
         try {
             console.log('inibodydariinstock', req.body)
-            let { idproduct, idunit, qty, date } = req.body
+            let { idproduct, idstock, idunit, qty, date } = req.body
             let insertInDatalog = `Insert into in_data_log values (null, ${db.escape(idproduct)},${db.escape(idunit)},${db.escape(qty)},${db.escape(date)},'Adding new stock')`
             let getInDataLog = await dbQuery(`SELECT id.*, u.satuan, i.url, p.nama FROM in_data_log id
             join unit u on id.idunit = u.idunit 
             join images i on id.idproduct = i.idproduct 
-            join products p on id.idproduct = p.idproduct order by id.idin_data_log asc;`)
+            join products p on id.idproduct = p.idproduct where id.date = '${date}' and id.idproduct = ${idproduct};`)
             let getStock = await dbQuery(`Select s.*, u.satuan from stocks s join unit u on s.idunit = u.idunit where idproduct = ${idproduct};`)
-            // console.log('test', getStock)
+            console.log(getStock[0].qty)
+            console.log((getStock[0].qty + qty) * getStock[1].qty)
             if (getInDataLog.length > 0) {
-                let temp = []
                 getInDataLog.forEach(async (val1) => {
-                    if (val1.date === date) {
-                        if (val1.idproduct == idproduct){
-                            await dbQuery(`UPDATE in_data_log set qty = ${val1.qty + qty} where date = '${date}' AND idproduct = ${idproduct};`)
-                            // await dbQuery(`UPDATE stocks set qty = ${getStock[0].qty + qty} where idstock = ${getStock[0].idstock}`)
-                            // await dbQuery(`UPDATE stocks set qty = ${(getStock[0].qty + qty)} where idstock = ${getStock[2].idstock}`)
-                        } else {
-                            await dbQuery(insertInDatalog)
-                            // await dbQuery(`UPDATE stocks set qty = ${getStock.qty + qty} where idstock = ${idstock}`)
-                        }
-                    } else if (val1.date === date && val1.idstock !== idstock) {
-
-                    } else if (val1.date !== date){
-                        await dbQuery(insertInDatalog)
-                    }
+                    await dbQuery(`UPDATE in_data_log set qty = ${val1.qty + qty} where date = '${date}' AND idproduct = ${idproduct};`)
+                    await dbQuery(`UPDATE stocks set qty = ${getStock[0].qty + qty} where idstock = ${idstock}`)
+                    await dbQuery(`UPDATE stocks set qty = ${(getStock[0].qty + qty) * getStock[1].qty} where idstock = ${getStock[2].idstock}`)
                 })
+            } else {
+                await dbQuery(insertInDatalog)
+                await dbQuery(`UPDATE stocks set qty = ${getStock[0].qty + qty} where idstock = ${idstock}`)
+                await dbQuery(`UPDATE stocks set qty = ${(getStock[0].qty + qty) * getStock[1].qty} where idstock = ${getStock[2].idstock}`)
             }
             res.status(200).send({
                 success: true,
