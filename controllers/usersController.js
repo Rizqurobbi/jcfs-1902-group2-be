@@ -56,7 +56,7 @@ module.exports = {
                         subject: "Confirm Registration Farmacia",
                         html: `<div>
                        <h3>Click link below to verif your account! </h3>
-                       <a href='http://localhost:3000/verify/${token}'>Verifikasi akun</a>   
+                       <a href='http://farmacia-jcfs1902g2.vercel.app/verify/${token}'>Verifikasi akun</a>
                        </div>`
                     })
                     res.status(200).send({
@@ -109,15 +109,22 @@ module.exports = {
             });
         }
     },
-    login: async (req, res, next) => {
+    login: async (req, res) => {
         let { email, password } = req.body
+        console.log(email)
         try {
-            let loginSQL = await dbQuery(
-                `SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
-            JOIN role r on u.idrole = r.idrole
-            JOIN status s on u.idstatus = s.idstatus
-            where email=${db.escape(email)} AND password=${db.escape(hashPassword(password))};`
-            )
+            if(email.includes('@')){
+                loginQuery = `SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
+                JOIN role r on u.idrole = r.idrole
+                JOIN status s on u.idstatus = s.idstatus
+                where email=${db.escape(email)} AND password=${db.escape(hashPassword(password))};`
+            } else {
+                loginQuery = `SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
+                JOIN role r on u.idrole = r.idrole
+                JOIN status s on u.idstatus = s.idstatus
+                where username=${db.escape(email)} AND password=${db.escape(hashPassword(password))};`
+            }
+            let loginSQL = await dbQuery(loginQuery)
             let resultsAddress = await dbQuery(`Select * from address`)
             if (loginSQL.length > 0) {
                 loginSQL.forEach((value, index) => {
@@ -202,7 +209,7 @@ module.exports = {
                 subject: "Reset your password",
                 html: `<div>
                        <h3>Click link below to reset your pasword</h3>
-                       <a href='http://localhost:3000/reset/${token}'>Reset Password</a>   
+                       <a href='http://farmacia-jcfs1902g2.vercel.app/reset/${token}'>Reset Password</a>   
                        </div>`
             })
             res.status(200).send({
