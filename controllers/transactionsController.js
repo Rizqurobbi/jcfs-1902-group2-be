@@ -366,16 +366,14 @@ module.exports = {
     },
     discardTransaction: async (req, res) => {
         try {
-            console.log('alsjdhaks')
             let { idtransaction, detail } = req.body
             console.log(idtransaction, detail)
             detail.forEach( async (val1) => {
                 let getStock = await dbQuery(`SELECT * from stocks where idproduct = ${val1.idproduct}`)
-                console.log(getStock)
                 getStock.forEach(async (val2) => {
                     if (val1.idstock == val2.idstock) {
-                        console.log('test', val1.qty + val2.qty, val2.idstock)
                         await dbQuery(`UPDATE stocks SET qty=${val1.qty + val2.qty} where idstock = ${val2.idstock}`)
+                        await dbQuery(`UPDATE stocks SET qty=${ getStock[1].qty * (val1.qty + val2.qty)} where idstock = ${getStock[2].idstock}`)
                     }
                 })
             })

@@ -11,7 +11,6 @@ module.exports = {
         })
     },
     readToken: (req, res, next) => {
-        console.log('token', req.token)
         jwt.verify(req.token, process.env.TOKEN_KEY, (err, decode) => {
             if (err) {
                 res.status(401).send({
@@ -20,9 +19,7 @@ module.exports = {
                     error: err
                 })
             }
-            console.log('ini decode', decode)
             req.dataUser = decode
-
             next()
         })
     }
