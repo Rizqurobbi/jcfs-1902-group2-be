@@ -629,25 +629,11 @@ module.exports = {
     },
     insertRevenue: async (req, res) => {
         try {
-            let insert = req.body.detail
-            let getRevenue = await dbQuery(`Select * from revenue`)
-
+            let getRevenue = await dbQuery(`Select * from revenue where date = '${req.body.date}'`)
             if (getRevenue.length > 0) {
-                getRevenue.forEach((val1) => {
-                    req.body.detail.forEach((val2, idx) => {
-                        if (val1.date == req.body.date) {
-                            dbQuery(`UPDATE revenue set total = ${val1.total + (val2.qty * val2.subtotal)} where idrevenue = ${val1.idrevenue}`)
-                            insert.splice(idx, 1)
-                        }
-                    })
-                })
-                insert.forEach(async (val) => {
-                    await dbQuery(`Insert into revenue values (null,${db.escape(req.body.date)},${db.escape(val.subtotal)});`)
-                })
+                await dbQuery(`UPDATE revenue set total = ${getRevenue[0].total + req.body.total} where date = '${req.body.date}'; `)
             } else {
-                insert.forEach(async (val) => {
-                    await dbQuery(`Insert into revenue values (null,${db.escape(req.body.date)},${db.escape(val.subtotal)});`)
-                })
+                await dbQuery(`Insert into revenue values (null,${db.escape(req.body.date)},${db.escape(req.body.total)});`)
             }
             res.status(200).send({
                 success: true,
