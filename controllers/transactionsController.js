@@ -267,7 +267,7 @@ module.exports = {
     },
     getAllTransactionsAdmin: async (req, res) => {
         try {
-            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status, a.* from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser JOIN address a on a.idaddress = t.idaddress ${req.query.invoice ? `WHERE t.invoice LIKE '%${req.query.invoice}%' or u.username LIKE '%${req.query.invoice}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date}'` : ''}`)
+            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status, a.* from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser JOIN address a on a.idaddress = t.idaddress ${req.query.invoice ? `WHERE t.invoice LIKE '%${req.query.invoice}%' or u.username LIKE '%${req.query.invoice}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date} 23:59'` : ''}`)
             let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes,t.description, d.*, i.url, p.nama, p.harga, un.satuan from detail_transactions d
             JOIN products p ON p.idproduct = d.idproduct 
             JOIN images i on p.idproduct = i.idproduct
@@ -300,7 +300,7 @@ module.exports = {
     },
     getPastTransactionsAdmin: async (req, res) => {
         try {
-            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status, a.* from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser JOIN address a on a.idaddress = t.idaddress where (t.idstatus = 5 or t.idstatus = 6) ${req.query.invoice ? `and t.invoice LIKE '%${req.query.invoice}%' or u.username LIKE '%${req.query.invoice}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date}'` : ''}`)
+            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status, a.* from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser JOIN address a on a.idaddress = t.idaddress where (t.idstatus = 5 or t.idstatus = 6) ${req.query.invoice ? `and t.invoice LIKE '%${req.query.invoice}%' or u.username LIKE '%${req.query.invoice}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date} 23:59'` : ''}`)
             let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes,t.description, d.*, i.url, p.nama, p.harga, un.satuan from detail_transactions d
             JOIN products p ON p.idproduct = d.idproduct 
             JOIN images i on p.idproduct = i.idproduct
@@ -333,7 +333,7 @@ module.exports = {
     },
     getOngoingTransactionsAdmin: async (req, res) => {
         try {
-            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status, a.* from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser JOIN address a on a.idaddress = t.idaddress where (t.idstatus = 4 or t.idstatus = 7 or t.idstatus = 8) ${req.query.invoice ? `and t.invoice LIKE '%${req.query.invoice}%' or u.username LIKE '%${req.query.invoice}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date}'` : ''}`)
+            let getTransactions = await dbQuery(`SELECT t.*, u.username, s.status, a.* from transactions t JOIN status s on t.idstatus = s.idstatus JOIN users u ON u.iduser = t.iduser JOIN address a on a.idaddress = t.idaddress where (t.idstatus = 4 or t.idstatus = 7 or t.idstatus = 8) ${req.query.invoice ? `and t.invoice LIKE '%${req.query.invoice}%' or u.username LIKE '%${req.query.invoice}%'` : ''}${req.query.start_date && req.query.end_date ? `and date between '${req.query.start_date}' and '${req.query.end_date} 23:59'` : ''}`)
             let getDetail = await dbQuery(`SELECT t.idtransaction, t.iduser, t.invoice, t.date, t.shipping, t.total_payment, t.notes,t.description, d.*, i.url, p.nama, p.harga, un.satuan from detail_transactions d
             JOIN products p ON p.idproduct = d.idproduct 
             JOIN images i on p.idproduct = i.idproduct
