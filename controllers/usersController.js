@@ -78,7 +78,6 @@ module.exports = {
     verify: async (req, res) => {
         try {
             if (req.dataUser.iduser) {
-                console.log('ini iduser', req.dataUser.iduser)
                 await dbQuery(`UPDATE users set idstatus=2 WHERE iduser=${db.escape(req.dataUser.iduser)};`)
                 let login = await dbQuery(`SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
                 JOIN role r on u.idrole = r.idrole
@@ -111,7 +110,6 @@ module.exports = {
     },
     login: async (req, res) => {
         let { email, password } = req.body
-        console.log(email)
         try {
             if(email.includes('@')){
                 loginQuery = `SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
@@ -178,7 +176,6 @@ module.exports = {
                         }
                     })
                 })
-                console.log('ini isi keeplogin', keepLoginScript)
                 let { iduser, idaddress, username, email, password, imageurl, role, status, fullname, gender, age, address } = keepLoginScript[0]
                 let token = createToken({ iduser, idaddress, username, email, password, imageurl, role, status, fullname, gender, age, address })
                 res.status(200).send({
@@ -188,7 +185,6 @@ module.exports = {
                 })
             }
         } catch (error) {
-            console.log('error keep login : ', error)
             res.status(500).send({
                 success: false,
                 message: 'Keep Failed',
@@ -265,7 +261,6 @@ module.exports = {
     changePassword: async (req, res) => {
         try {
             let { newPassword, oldPassword } = req.body
-            console.log('oldpass', hashPassword(oldPassword), 'newpass', req.dataUser.password)
             if (hashPassword(oldPassword) === req.dataUser.password) {
                 if (req.dataUser.iduser) {
                     await dbQuery(`UPDATE users set password=${db.escape(hashPassword(newPassword))} WHERE iduser=${db.escape(req.dataUser.iduser)};`)
@@ -343,7 +338,6 @@ module.exports = {
                 if (getProvince && getCity) {
                     let province = getProvince.data.rajaongkir.results.province
                     let city = getCity.data.rajaongkir.results.city_name
-                    console.log('getprovince and city', province, city)
                     await dbQuery(`INSERT into address values(null, ${req.dataUser.iduser}, ${db.escape(idprovince)}, ${db.escape(idcity)},  ${db.escape(address_label)}, ${db.escape(name)}, '${handphone}', '${province}', '${city}', ${db.escape(address)} )`)
                     res.status(200).send({
                         success: true,
@@ -369,7 +363,6 @@ module.exports = {
             if (getProvince && getCity) {
                 let province = getProvince.data.rajaongkir.results.province
                 let city = getCity.data.rajaongkir.results.city_name
-                console.log(idprovince, idcity)
                 if (req.dataUser.iduser) {
                     await dbQuery(`UPDATE address SET address_label=${db.escape(address_label)}, idprovince=${db.escape(idprovince)}, idcity=${db.escape(idcity)}, nama_penerima=${db.escape(name)}, handphone='${handphone}', province='${province}', city='${city}', address=${db.escape(address)}
                     WHERE iduser=${req.dataUser.iduser} AND idaddress=${idaddress};`)
@@ -411,7 +404,6 @@ module.exports = {
     chooseAddress: async (req, res) => {
         try {
             let { idaddress } = req.body
-            console.log('ini idaddress', idaddress)
             await dbQuery(`UPDATE users SET idaddress = ${db.escape(idaddress)} WHERE iduser = ${req.dataUser.iduser};`)
             res.status(200).send({
                 success: true,

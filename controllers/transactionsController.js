@@ -132,7 +132,7 @@ module.exports = {
     },
     checkoutRecipe: async (req, res) => {
         try {
-            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null, ${req.body.iduser}, ${db.escape(req.body.idaddress)}, 4, ${db.escape(req.body.invoice)}, DATE_ADD(now(), INTERVAL 7 HOUR),${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)},'Recipe', null)`)
+            let insertTransactions = await dbQuery(`INSERT INTO transactions values (null, ${req.body.iduser}, ${db.escape(req.body.idaddress)}, 7, ${db.escape(req.body.invoice)}, DATE_ADD(now(), INTERVAL 7 HOUR),${db.escape(req.body.total_price)},${db.escape(req.body.shipping)},${db.escape(req.body.total_payment)},${db.escape(req.body.notes)},'Recipe', null)`)
             if (insertTransactions.insertId) {
                 req.body.detail.forEach(async (value) => {
                     let resultsStocks = await dbQuery(`Select s.*, u.satuan from stocks s join unit u on s.idunit = u.idunit where idproduct = ${value.idproduct};`)
@@ -392,6 +392,34 @@ module.exports = {
             })
         }
     },
+    discardTransactionRecipe: async (req, res) => {
+        try {
+            let { idtransaction, detail } = req.body
+            detail.forEach( async (val1) => {
+                let getStock = await dbQuery(`SELECT * from stocks where idproduct = ${val1.idproduct}`)
+                getStock.forEach(async (val2) => {
+                    if (val1.idstock == val2.idstock) {
+                        await dbQuery(`UPDATE stocks SET qty=${Math.floor((val1.qty + val2.qty) / getStock[1].qty)} where idstock = ${getStock[0].idstock}`)
+                        await dbQuery(`UPDATE stocks SET qty=${ val2.qty + val1.qty } where idstock = ${val2.idstock}`)
+                    }
+                })
+            })
+            await dbQuery(`UPDATE transactions SET idstatus = 6 where idtransaction=${idtransaction}`)
+            await dbQuery(`UPDATE resep SET idstatus=6 where invoice='${detail[0].invoice}'`)
+            res.status(200).send({
+                success: true,
+                message: "Update status success",
+                error: ''
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: "Failed",
+                error
+            })
+        }
+    },
     getRecipe: async (req, res) => {
         try {
             if (req.dataUser.role === 'User') {
@@ -404,12 +432,10 @@ module.exports = {
                     error: ""
                 })
             } else {
-                console.log('ini role', req.dataUser.role)
                 let getRecipe = await dbQuery(`SELECT u.username, a.*, r.*, s.status FROM jcfs1902group2.resep r
                 JOIN users u on u.iduser = r.iduser 
                 JOIN status s on s.idstatus = r.idstatus
                 JOIN address a on u.idaddress = a.idaddress where r.idstatus = 9;`)
-                console.log('getrecipe', getRecipe)
                 res.status(200).send({
                     success: true,
                     message: 'Get User Recipe success',
@@ -439,12 +465,10 @@ module.exports = {
                     error: ""
                 })
             } else {
-                console.log('ini role', req.dataUser.role)
                 let getRecipe = await dbQuery(`SELECT u.username, a.*, r.*, s.status FROM jcfs1902group2.resep r
                 JOIN users u on u.iduser = r.iduser 
                 JOIN status s on s.idstatus = r.idstatus
                 JOIN address a on u.idaddress = a.idaddress where r.idstatus = 9;`)
-                console.log('getrecipe', getRecipe)
                 res.status(200).send({
                     success: true,
                     message: 'Get User Recipe success',
@@ -649,17 +673,12 @@ module.exports = {
     },
     confirmTransaction: async (req, res) => {
         try {
-            console.log('test', req.body.detail)
             await dbQuery(`UPDATE transactions SET idstatus=5 where idtransaction=${req.body.idtransaction}`)
             let insert = req.body.detail
             let getSalesReport = await dbQuery(`Select * from sales_report`)
             if (getSalesReport.length > 0) {
                 getSalesReport.forEach((val1) => {
                     req.body.detail.forEach((val2, idx) => {
-                        console.log('id1 id2', val1.idproduct, val2.idproduct)
-                        console.log('date1 date2', val1.date, req.body.date)
-                        console.log('desc1 desc2', val1.description, val2.description)
-                        console.log(val1.idproduct == val2.idproduct && val1.date == req.body.date && val1.description == val2.description)
                         if (val1.idproduct == val2.idproduct && val1.date == req.body.date && val1.description == val2.description) {
                             dbQuery(`UPDATE sales_report set qty = ${val1.qty + val2.qty}, total = ${val1.total + (val2.qty * val2.subtotal)} where idsales_report = ${val1.idsales_report}`)
                             insert.splice(idx, 1)
