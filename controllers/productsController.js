@@ -15,9 +15,6 @@ module.exports = {
             let resultsProducts = await dbQuery(getSql)
             let resultsImages = await dbQuery(`Select * from images`)
             let resultsStocks = await dbQuery(`Select s.*,u.satuan from stocks s join unit u on s.idunit = u.idunit`)
-            console.log('Before', filterQuery)
-            console.log('After', filterQuery.join(' AND '))
-            console.log('Combined Script', getSql);
             resultsProducts.forEach((value, index) => {
                 value.images = []
                 value.stocks = []
@@ -92,8 +89,6 @@ module.exports = {
             const uploadFile = uploader('/imgProducts', 'IMGPRO').array('Images', 5)
             uploadFile(req, res, async (error) => {
                 try {
-                    console.log("Jangan Null", req.body);
-                    console.log('cek uploadFile', req.files);
                     let { idcategory, idunit, qty, date, nama, berat, harga, deskripsi, penyajian, dosis, caraPenyimpanan, kegunaan, komposisi, efekSamping, stocks } = JSON.parse(req.body.data)
                     let insertProducts = await dbQuery(`Insert into products values (null,${db.escape(idcategory)},2,${db.escape(nama)},${db.escape(harga)},${db.escape(deskripsi)},${db.escape(penyajian)},${db.escape(dosis)},${db.escape(caraPenyimpanan)},${db.escape(kegunaan)},${db.escape(komposisi)},${db.escape(efekSamping)})`)
                     if (insertProducts.insertId) {
@@ -101,7 +96,7 @@ module.exports = {
                             await dbQuery(`Insert into images values (null,${insertProducts.insertId},'/imgProducts/${req.files[i].filename}')`)
                         }
                         await dbQuery(`Insert into stocks values ${stocks.map(val => `(null,${insertProducts.insertId},${val.idunit},${val.qty},${val.isnetto})`)}`)
-                        await dbQuery(`INSERT INTO in_data_log value (null,${insertProducts.insertId}, ${idunit}, ${qty}, ${date}, 'New Product')`)
+                        await dbQuery(`INSERT INTO in_data_log value (null, 1, ${idunit}, ${qty}, DATE_ADD( now(), interval 7 hour), 'New Product')`)
                         res.status(200).send(insertProducts)
                     }
                 } catch (error) {
@@ -173,7 +168,6 @@ module.exports = {
     },
     outStockRecord: async (req, res) => {
         try {
-            console.log('inibody', req.body.detail)
             let getOutDataLog = await dbQuery(`SELECT od.*, u.satuan, i.url, p.nama FROM out_data_log od 
                     join stocks s on od.idstock = s.idstock 
                     join unit u on s.idunit = u.idunit 
@@ -184,7 +178,6 @@ module.exports = {
                     req.body.detail.forEach((val2, idx) => {
                         if (val1.idproduct === val2.idproduct && val1.idstock === val2.idstock) {
                             if (val1.date === req.body.date) {
-                                console.log('ini qty', val1.qty, val2.qty)
                                 dbQuery(`UPDATE out_data_log set qty = ${val1.qty + val2.qty} where idout_data_log = ${val1.idout_data_log};`)
                                 req.body.detail.splice(idx, 1)
                             }
@@ -254,7 +247,6 @@ module.exports = {
     },
     inStockRecord: async (req, res) => {
         try {
-            console.log('inibodydariinstock', req.body)
             let { idproduct, idstock, idunit, qty, date } = req.body
             let insertInDatalog = `Insert into in_data_log values (null, ${db.escape(idproduct)},${db.escape(idunit)},${db.escape(qty)},${db.escape(date)},'Adding new stock')`
             let getInDataLog = await dbQuery(`SELECT id.*, u.satuan, i.url, p.nama FROM in_data_log id
@@ -262,8 +254,6 @@ module.exports = {
             join images i on id.idproduct = i.idproduct 
             join products p on id.idproduct = p.idproduct where id.date = '${date}' and id.idproduct = ${idproduct};`)
             let getStock = await dbQuery(`Select s.*, u.satuan from stocks s join unit u on s.idunit = u.idunit where idproduct = ${idproduct};`)
-            console.log(getStock[0].qty)
-            console.log((getStock[0].qty + qty) * getStock[1].qty)
             if (getInDataLog.length > 0) {
                 getInDataLog.forEach(async (val1) => {
                     await dbQuery(`UPDATE in_data_log set qty = ${val1.qty + qty} where date = '${date}' AND idproduct = ${idproduct};`)

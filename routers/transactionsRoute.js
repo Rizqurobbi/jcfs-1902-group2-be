@@ -18,6 +18,7 @@ router.get('/adminpasttransactions', readToken, transactionsController.getPastTr
 router.get('/ongoingusertransactions', readToken, transactionsController.getUserOngoingTransactions)
 router.get('/pastusertransactions', readToken, transactionsController.getUserPastTransactions)
 router.patch('/discardtransaction', readToken, transactionsController.discardTransaction)
+router.patch('/discardrectransaction', readToken, transactionsController.discardTransactionRecipe)
 
 router.get('/recipe', readToken, transactionsController.getRecipe)
 router.get('/recipebyuser', readToken, transactionsController.getRecipeByUser)
