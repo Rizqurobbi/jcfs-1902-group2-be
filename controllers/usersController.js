@@ -82,13 +82,23 @@ module.exports = {
                 let login = await dbQuery(`SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
                 JOIN role r on u.idrole = r.idrole
                 JOIN status s on u.idstatus = s.idstatus where iduser=${db.escape(req.dataUser.iduser)};`)
+                let resultsAddress = await dbQuery(`Select * from address`)
+                login.forEach((value, index) => {
+                    value.address = []
+                    resultsAddress.forEach(val => {
+                        if (value.iduser == val.iduser) {
+                            delete val.idproduct
+                            value.address.push(val)
+                        }
+                    })
+                })
                 if (login.length > 0) {
-                    let { iduser, idaddress, username, email, role, status, imageurl, fullname, gender, age } = login[0]
-                    let token = createToken({ iduser, idaddress, username, email, role, status, imageurl, fullname, gender, age })
+                    let { iduser, idaddress, address, username, email, role, status, imageurl, fullname, gender, age } = login[0]
+                    let token = createToken({ iduser, idaddress, address, username, email, role, status, imageurl, fullname, gender, age })
                     res.status(200).send({
                         success: true,
                         message: "Login Success",
-                        dataVerify: { iduser, idaddress, username, email, role, status, imageurl, token, fullname, gender, age },
+                        dataVerify: { iduser, idaddress, username, email, imageurl, role, status, token, fullname, gender, age, address },
                         error: ""
                     })
                 }
@@ -101,6 +111,7 @@ module.exports = {
                 })
             }
         } catch (error) {
+            console.log(error)
             res.status(500).send({
                 success: false,
                 message: "Failed",
@@ -108,10 +119,45 @@ module.exports = {
             });
         }
     },
+    verifyNewEmail: async (req, res) => {
+        try {
+            if (req.dataUser.iduser) {
+                await dbQuery(`UPDATE users SET idstatus = 1 where iduser = ${req.dataUser.iduser}`)
+                let login = await dbQuery(`SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
+                JOIN role r on u.idrole = r.idrole
+                JOIN status s on u.idstatus = s.idstatus where iduser=${db.escape(req.dataUser.iduser)};`)
+                if (login.length > 0) {
+                    let { iduser, idaddress, username, email, role, status, imageurl, fullname, gender, age } = login[0]
+                    let token = createToken({ iduser, idaddress, username, email, role, status, imageurl, fullname, gender, age })
+                    await transporter.sendMail({
+                        from: "Farmacia",
+                        to: `${req.body.email}`,
+                        subject: "Confirm Your Changed Email",
+                        html: `<div>
+                        <h3>Click link below to verif your account! </h3>
+                        <a href='http://farmacia-jcfs1902g2.vercel.app/verify/${token}'>Verifikasi akun</a>
+                        </div>`
+                    })
+                    res.status(200).send({
+                        success: true,
+                        message: "Register Success",
+                        error: ""
+                    })
+                }
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).send({
+                success: false,
+                message: 'Failed',
+                error
+            })
+        }
+    },
     login: async (req, res) => {
         let { email, password } = req.body
         try {
-            if(email.includes('@')){
+            if (email.includes('@')) {
                 loginQuery = `SELECT u.*, r.role, s.status FROM jcfs1902group2.users u 
                 JOIN role r on u.idrole = r.idrole
                 JOIN status s on u.idstatus = s.idstatus
